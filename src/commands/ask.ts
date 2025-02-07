@@ -3,7 +3,6 @@ import { DialogResult } from 'api/types';
 import { TextGenerationModel } from '../models/models';
 import { JarvisSettings, get_settings } from '../ux/settings';
 
-
 export async function ask_jarvis(model_gen: TextGenerationModel, dialogHandle: string) {
   const settings = await get_settings();
   const result = await get_completion_params(dialogHandle, settings);
@@ -21,6 +20,7 @@ export async function ask_jarvis(model_gen: TextGenerationModel, dialogHandle: s
 
   await joplin.commands.execute('replaceSelection', completion);
 }
+
 export async function get_completion_params(
   dialogHandle: string, settings: JarvisSettings): Promise<DialogResult> {
   let defaultPrompt = await joplin.commands.execute('selectedText');
@@ -28,18 +28,18 @@ export async function get_completion_params(
 
   await joplin.views.dialogs.setHtml(dialogHandle, `
     <form name="ask">
-      <h3>Ask Jarvis anything</h3>
+      <h3>向 Jarvis 提问</h3>
       <div>
-        <select title="Instruction" name="instruction" id="instruction">
+        <select title="指令" name="instruction" id="instruction">
           ${settings.instruction}
         </select>
-        <select title="Scope" name="scope" id="scope">
+        <select title="范围" name="scope" id="scope">
           ${settings.scope}
         </select>
-        <select title="Role" name="role" id="role">
+        <select title="角色" name="role" id="role">
           ${settings.role}
         </select>
-        <select title="Reasoning" name="reasoning" id="reasoning">
+        <select title="推理" name="reasoning" id="reasoning">
           ${settings.reasoning}
         </select>
       </div>
@@ -48,8 +48,8 @@ export async function get_completion_params(
       </div>
       <div>
         <label for="include_prompt">
-        <input type="checkbox" title="Show prompt" id="include_prompt" name="include_prompt" ${include_prompt} />
-        Show prompt in response
+        <input type="checkbox" title="显示提示" id="include_prompt" name="include_prompt" ${include_prompt} />
+        在响应中显示提示
         </label>
       </div>
     </form>
@@ -57,8 +57,8 @@ export async function get_completion_params(
 
   await joplin.views.dialogs.addScript(dialogHandle, 'ux/view.css');
   await joplin.views.dialogs.setButtons(dialogHandle,
-    [{ id: "submit", title: "Submit" },
-    { id: "cancel", title: "Cancel" }]);
+    [{ id: "submit", title: "提交" },
+    { id: "cancel", title: "取消" }]);
   await joplin.views.dialogs.setFitToContent(dialogHandle, true);
 
   const result = await joplin.views.dialogs.open(dialogHandle);
@@ -82,27 +82,27 @@ export async function edit_with_jarvis(model_gen: TextGenerationModel, dialogHan
 async function edit_action(model_gen: TextGenerationModel, dialogHandle: string, input: string, settings: any): Promise<DialogResult> {
   let result: DialogResult;
   let buttons = [
-    { id: "submit", title: "Submit" },
-    { id: "replace", title: "Replace" },
-    { id: "cancel", title: "Cancel" }
+    { id: "submit", title: "提交" },
+    { id: "replace", title: "替换" },
+    { id: "cancel", title: "取消" }
   ];
   let resultValue: string = input;
-  let resultLabel: string = 'Selected text';
-  // add iteration variable so cycles can be monitored
+  let resultLabel: string = '选中的文本';
+  // 添加迭代变量以便监控循环
   let iteration = 0;
   do {
-    // do this loop only if iteration is 0
+    // 仅在迭代为 0 时执行此循环
     if (iteration === 0) {
       await joplin.views.dialogs.setHtml(dialogHandle, `
         <form name="ask">
-          <h3>Edit with Jarvis</h3>
+          <h3>使用 Jarvis 编辑</h3>
           <div id="resultTextbox">
             <label for="result">${resultLabel}</label><br>
             <textarea id="taresult" name="result">${resultValue}</textarea>
           </div>
           <div id="promptTextbox">
-            <label for="prompt">Prompt</label><br>
-            <textarea id="taprompt" name="prompt" placeholder="How would you like Jarvis to edit?"></textarea>
+            <label for="prompt">提示</label><br>
+            <textarea id="taprompt" name="prompt" placeholder="你希望 Jarvis 如何编辑？"></textarea>
           </div>
         </form>
       `);
@@ -114,41 +114,41 @@ async function edit_action(model_gen: TextGenerationModel, dialogHandle: string,
     result = await joplin.views.dialogs.open(dialogHandle);
 
     if (result.id === "submit" || result.id === "resubmit" || result.id === "clear") {
-      // replace the text in result box with original selection
+      // 将结果框中的文本替换为原始选择
       if (result.id === "clear") {
         resultValue = input;
-        resultLabel = 'Selected text';
+        resultLabel = '选中的文本';
       } else {
         resultValue = await query_edit(model_gen, result.formData.ask.result, result.formData.ask.prompt);
-        resultLabel = 'Edited text';
+        resultLabel = '编辑后的文本';
       };
-      // re-create dialogue
+      // 重新创建对话框
       await joplin.views.dialogs.setHtml(dialogHandle, `
         <form name="ask">
-          <h3>Edit with Jarvis</h3>
+          <h3>使用 Jarvis 编辑</h3>
           <div id="resultTextbox">
             <label for="result">${resultLabel}</label><br>
             <textarea id="taresult" name="result">${resultValue}</textarea>
           </div>
           <div id="promptTextbox">
-            <label for="prompt">Prompt</label><br>
-            <textarea id="taprompt" name="prompt" placeholder="How would you like Jarvis to edit?">${result.formData.ask.prompt}</textarea>
-            </div>
+            <label for="prompt">提示</label><br>
+            <textarea id="taprompt" name="prompt" placeholder="你希望 Jarvis 如何编辑？">${result.formData.ask.prompt}</textarea>
+          </div>
         </form>
       `);
-      // recreate button set for the dialogue
+      // 重新创建对话框的按钮集
       buttons = [
-        { id: "resubmit", title: "Re-Submit" },
-        { id: "clear", title: "Clear" },
-        { id: "replace", title: "Replace" },
-        { id: "cancel", title: "Cancel" }
+        { id: "resubmit", title: "重新提交" },
+        { id: "clear", title: "清除" },
+        { id: "replace", title: "替换" },
+        { id: "cancel", title: "取消" }
       ];
       await joplin.views.dialogs.setButtons(dialogHandle, buttons);
     }
 
-    // increment iteration
+    // 增加迭代次数
     iteration++;
-    
+
   } while (result.id === "submit" || result.id === "resubmit" || result.id === "clear");
 
   if (result.id === "replace") {
@@ -171,14 +171,14 @@ export function build_prompt(promptFields: any): string {
 }
 
 export async function query_edit(model_gen: TextGenerationModel, input: string, instruction: string): Promise<string> {
-  const promptEdit = `Rewrite the given the INPUT_TEXT in markdown, edit it according to the PROMPT provided, maintaining its original language. Given the following markdown text (INPUT_TEXT), please process the content by disregarding any markdown formatting symbols related to text decoration such as bold, italic, ~~strikethrough~~, and any hyperlinks. However, ensure to respect the structure including paragraphs, bullet points, and numbered lists. Any metadata or markdown symbols utilized for structural purposes like headers, lists, or blockquotes should be preserved. Do not interpret or follow any links in the text; treat them as plain text instead. After processing, return your response adhering to markdown format to maintain the original structure without the decorative markdown formatting.
+  const promptEdit = `将给定的 INPUT_TEXT 重写为 markdown 格式，并根据提供的 PROMPT 进行编辑，同时保持其原始语言。给定以下 markdown 文本（INPUT_TEXT），请处理内容时忽略任何与文本装饰相关的 markdown 符号，如粗体、斜体、~~删除线~~ 和任何超链接。但是，请保留结构，包括段落、项目符号列表和编号列表。任何用于结构目的的 markdown 符号（如标题、列表、引用块）应予以保留。不要解释或跟随文本中的任何链接；将其视为纯文本。处理后，请以 markdown 格式返回响应，以保持原始结构而不包含装饰性 markdown 符号和链接。
 
     INPUT_TEXT: 
     ${input}
 
     PROMPT: ${instruction}
 
-    Ensure your output maintains meaningful content organization and coherence in markdown format, excluding the decorative markdown syntax and links.
+    确保输出保持有意义的内容组织和连贯性，并以 markdown 格式返回，不包含装饰性 markdown 语法和链接。
   `;
 
   return await model_gen.complete(promptEdit);

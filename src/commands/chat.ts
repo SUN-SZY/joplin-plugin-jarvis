@@ -5,33 +5,32 @@ import { update_panel } from '../ux/panel';
 import { get_settings, JarvisSettings, ref_notes_prefix, search_notes_cmd, user_notes_cmd, context_cmd, notcontext_cmd } from '../ux/settings';
 import { split_by_tokens } from '../utils';
 
-
 export async function chat_with_jarvis(model_gen: TextGenerationModel) {
   const prompt = await get_chat_prompt(model_gen);
 
-  await replace_selection('\n\nGenerating response...');
+  await replace_selection('\n\n生成响应中...');
 
   await replace_selection(await model_gen.chat(prompt));
 }
 
-export async function chat_with_notes(model_embed: TextEmbeddingModel, model_gen: TextGenerationModel, panel: string, preview: boolean=false) {
+export async function chat_with_notes(model_embed: TextEmbeddingModel, model_gen: TextGenerationModel, panel: string, preview: boolean = false) {
   if (model_embed.model === null) { return; }
 
   const settings = await get_settings();
   const [prompt, nearest] = await get_chat_prompt_and_notes(model_embed, model_gen, settings);
   if (nearest[0].embeddings.length === 0) {
-    if (!preview) { await replace_selection(settings.chat_prefix + 'No notes found. Perhaps try to rephrase your question, or start a new chat note for fresh context.' + settings.chat_suffix); }
+    if (!preview) { await replace_selection(settings.chat_prefix + '未找到笔记。请尝试重新表述你的问题，或开始一个新的聊天笔记以获得新的上下文。' + settings.chat_suffix); }
     return;
   }
-  if (!preview) { await replace_selection('\n\nGenerating notes response...'); }
+  if (!preview) { await replace_selection('\n\n生成笔记响应中...'); }
 
   const [note_text, selected_embd] = await extract_blocks_text(nearest[0].embeddings, model_gen, model_gen.context_tokens, prompt.search);
   if (note_text === '') {
-    if (!preview) { await replace_selection(settings.chat_prefix + 'No notes found. Perhaps try to rephrase your question, or start a new chat note for fresh context.' + settings.chat_suffix); }
+    if (!preview) { await replace_selection(settings.chat_prefix + '未找到笔记。请尝试重新表述你的问题，或开始一个新的聊天笔记以获得新的上下文。' + settings.chat_suffix); }
     return;
   }
   const note_links = extract_blocks_links(selected_embd);
-  let instruct = "Respond to the user prompt that appears at the top. You are given user notes. Use them as if they are your own knowledge, without decorations such as 'according to my notes'. First, determine which notes are relevant to the prompt, without specifying it in the reply. Then, write your reply to the prompt based on these selected notes. In the text of your answer, always cite related notes in the format: Some text [note number]. Do not compile a reference list at the end of the reply. Example: 'This is the answer, as appears in [note 1]'.";
+  let instruct = "根据顶部的用户提示进行回复。你已获得用户笔记。将它们视为自己的知识，不要使用诸如 '根据我的笔记' 这样的修饰语。首先，确定哪些笔记与提示相关，但不要在回复中指定。然后，根据这些选定的笔记编写对提示的回复。在回答的文本中，始终以 [笔记编号] 的格式引用相关笔记。不要在回复的末尾编译参考列表。示例：'这是答案，如 [笔记 1] 所示'。";
   if (settings.notes_prompt) {
     instruct = settings.notes_prompt;
   }
@@ -39,52 +38,52 @@ export async function chat_with_notes(model_embed: TextEmbeddingModel, model_gen
   let completion = await model_gen.chat(`
   ${prompt.prompt}
   ===
-  End of user prompt
+  用户提示结束
   ===
 
-  User Notes
+  用户笔记
   ===
   ${note_text}
   ===
 
-  Instructions
+  指令
   ===
   ${instruct}
   ===
   `, preview);
   if (!preview) { await replace_selection(completion.replace(model_gen.user_prefix, `\n\n${note_links}${model_gen.user_prefix}`)); }
-  nearest[0].embeddings = selected_embd
+  nearest[0].embeddings = selected_embd;
   update_panel(panel, nearest, settings);
 }
 
 type ParsedData = { [key: string]: string };
-const cmd_block_pattern: RegExp = /```jarvis[\s\S]*?```/gm;
+const cmd_block_pattern: RegExp = /jarvis[\s\S]*?/gm;
 
 export async function get_chat_prompt(model_gen: TextGenerationModel): Promise<string> {
-  // get cursor position
+  // 获取光标位置
   const cursor = await joplin.commands.execute('editor.execCommand', {
     name: 'getCursor',
     args: ['from'],
   });
-  // get all text up to current cursor
+  // 获取光标前的所有文本
   let prompt = await joplin.commands.execute('editor.execCommand', {
     name: 'getRange',
-    args: [{line: 0, ch: 0}, cursor],
+    args: [{ line: 0, ch: 0 }, cursor],
   });
-  // remove chat commands
+  // 移除聊天命令
   prompt = prompt.replace(cmd_block_pattern, '');
-  // get last tokens
+  // 获取最后的标记
   prompt = split_by_tokens([prompt], model_gen, model_gen.memory_tokens, 'last')[0].join(' ');
 
   return prompt;
 }
 
 async function get_chat_prompt_and_notes(model_embed: TextEmbeddingModel, model_gen: TextGenerationModel, settings: JarvisSettings):
-    Promise<[{prompt: string, search: string, notes: Set<string>, context: string, not_context: string[]}, NoteEmbedding[]]> {
+    Promise<[{ prompt: string, search: string, notes: Set<string>, context: string, not_context: string[] }, NoteEmbedding[]]> {
   const note = await joplin.workspace.selectedNote();
   const prompt = get_notes_prompt(await get_chat_prompt(model_gen), note, model_gen);
 
-  // filter embeddings based on prompt
+  // 根据提示过滤嵌入
   let sub_embeds: BlockEmbedding[] = [];
   if (prompt.notes.size > 0) {
     sub_embeds.push(...model_embed.embeddings.filter((embd) => prompt.notes.has(embd.id)));
@@ -97,16 +96,16 @@ async function get_chat_prompt_and_notes(model_embed: TextEmbeddingModel, model_
   if (sub_embeds.length === 0) {
     sub_embeds = model_embed.embeddings;
   } else {
-    // rank notes by similarity but don't filter out any notes
+    // 按相似度对笔记进行排名，但不筛选任何笔记
     settings.notes_min_similarity = 0;
   }
 
-  // get embeddings
+  // 获取嵌入
   if (prompt.context && prompt.context.length > 0) {
-    // replace current note with user-defined context
+    // 用用户定义的上下文替换当前笔记
     note.body = prompt.context;
   } else {
-    // use X last user prompt as context
+    // 使用 X 个最后一个用户提示作为上下文
     const chat = model_gen._parse_chat(prompt.prompt)
       .filter((msg) => msg.role === 'user');
     if (chat.length > 0) {
@@ -114,30 +113,30 @@ async function get_chat_prompt_and_notes(model_embed: TextEmbeddingModel, model_
     }
   }
   if (prompt.not_context.length > 0) {
-    // remove from context
+    // 从上下文中移除
     for (const nc of prompt.not_context) {
       note.body = note.body.replace(new RegExp(nc, 'g'), '');
     }
   }
   const nearest = await find_nearest_notes(sub_embeds, note.id, note.title, note.body, model_embed, settings, false);
   if (nearest.length === 0) {
-    nearest.push({id: note.id, title: 'Chat context', embeddings: [], similarity: null});
+    nearest.push({ id: note.id, title: '聊天上下文', embeddings: [], similarity: null });
   }
 
-  // post-processing: attach additional blocks to the nearest ones
+  // 后处理：附加其他块到最近的笔记
   let attached: Set<string> = new Set();
   let blocks: BlockEmbedding[] = [];
   for (const embd of nearest[0].embeddings) {
-    // bid is a concatenation of note id and block line number (e.g. 'note_id:1234')
+    // bid 是笔记 ID 和块行号的连接（例如 'note_id:1234'）
     const bid = `${embd.id}:${embd.line}`;
     if (attached.has(bid)) {
       continue;
     }
-    // TODO: rethink whether we should indeed skip the entire iteration
+    // TODO: 重新考虑是否确实应该跳过整个迭代
 
     if (settings.notes_attach_prev > 0) {
       const prev = await get_prev_blocks(embd, model_embed.embeddings, settings.notes_attach_prev);
-      // push in reverse order
+      // 按反向顺序推送
       for (let i = prev.length - 1; i >= 0; i--) {
         const bid = `${prev[i].id}:${prev[i].line}`;
         if (attached.has(bid)) { continue; }
@@ -146,7 +145,7 @@ async function get_chat_prompt_and_notes(model_embed: TextEmbeddingModel, model_
       }
     }
 
-    // current block
+    // 当前块
     attached.add(bid);
     blocks.push(embd);
 
@@ -176,21 +175,21 @@ async function get_chat_prompt_and_notes(model_embed: TextEmbeddingModel, model_
 }
 
 function get_notes_prompt(prompt: string, note: any, model_gen: TextGenerationModel):
-    {prompt: string, search: string, notes: Set<string>, context: string, not_context: string[]} {
-  // get global commands
+    { prompt: string, search: string, notes: Set<string>, context: string, not_context: string[] } {
+  // 获取全局命令
   const commands = get_global_commands(note.body);
   note.body = note.body.replace(cmd_block_pattern, '');
 
-  // (previous responses) strip lines that start with {ref_notes_prefix}
+  // (之前的响应) 去除以 {ref_notes_prefix} 开头的行
   prompt = prompt.replace(new RegExp('^' + ref_notes_prefix + '.*$', 'gm'), '');
   const chat = model_gen._parse_chat(prompt);
   let last_user_prompt = '';
-  if (chat[chat.length -1].role === 'user') {
+  if (chat[chat.length - 1].role === 'user') {
     last_user_prompt = chat[chat.length - 1].content;
   }
 
-  // (user input) parse lines that start with {search_notes_prefix}, and strip them from the prompt
-  let search = commands[search_notes_cmd.slice(0, -1).toLocaleLowerCase()];  // last search string
+  // (用户输入) 解析以 {search_notes_cmd} 开头的行，并从提示中移除它们
+  let search = commands[search_notes_cmd.slice(0, -1).toLocaleLowerCase()];  // 最后一个搜索字符串
   const search_regex = new RegExp('^' + search_notes_cmd + '.*$', 'igm');
   prompt = prompt.replace(search_regex, '');
   let matches = last_user_prompt.match(search_regex);
@@ -198,23 +197,23 @@ function get_notes_prompt(prompt: string, note: any, model_gen: TextGenerationMo
     search = matches[matches.length - 1].substring(search_notes_cmd.length).trim();
   };
 
-  // (user input) parse lines that start with {user_notes_prefix}, and strip them from the prompt
+  // (用户输入) 解析以 {user_notes_cmd} 开头的行，并从提示中移除它们
   const global_ids = commands[user_notes_cmd.slice(0, -1).toLocaleLowerCase()];
-  let note_ids: string[] = []
+  let note_ids: string[] = [];
   if (global_ids) {
-     note_ids = global_ids.match(/[a-zA-Z0-9]{32}/g);
+    note_ids = global_ids.match(/[a-zA-Z0-9]{32}/g);
   }
   const notes_regex = new RegExp('^' + user_notes_cmd + '.*$', 'igm');
   prompt = prompt.replace(notes_regex, '');
   matches = last_user_prompt.match(notes_regex);
   if (matches !== null) {
-    // get all note IDs (32 alphanumeric characters)
+    // 获取所有笔记 ID（32 个字母数字字符）
     note_ids = matches[matches.length - 1].match(/[a-zA-Z0-9]{32}/g);
   }
   const notes = new Set(note_ids);
 
-  // (user input) parse lines that start with {context_cmd}, and strip them from the prompt
-  let context = commands[context_cmd.slice(0, -1).toLocaleLowerCase()];  // last context string
+  // (用户输入) 解析以 {context_cmd} 开头的行，并从提示中移除它们
+  let context = commands[context_cmd.slice(0, -1).toLocaleLowerCase()];  // 最后一个上下文字符串
   const context_regex = new RegExp('^' + context_cmd + '.*$', 'igm');
   prompt = prompt.replace(context_regex, '');
   matches = last_user_prompt.match(context_regex);
@@ -222,8 +221,8 @@ function get_notes_prompt(prompt: string, note: any, model_gen: TextGenerationMo
     context = matches[matches.length - 1].substring(context_cmd.length).trim();
   }
 
-  // (user input) parse lines that start with {notcontext_cmd}, and strip *only the command* prompt
-  let not_context: string[] = [];  // all not_context strings (to be excluded later)
+  // (用户输入) 解析以 {notcontext_cmd} 开头的行，并仅移除命令本身
+  let not_context: string[] = [];  // 所有 not_context 字符串（稍后排除）
   const remove_cmd = new RegExp('^' + notcontext_cmd, 'igm');
   const get_line = new RegExp('^' + notcontext_cmd + '.*$', 'igm');
   matches = prompt.match(get_line);
@@ -236,35 +235,35 @@ function get_notes_prompt(prompt: string, note: any, model_gen: TextGenerationMo
   const last_match = last_user_prompt.match(get_line);
   const global_match = commands[notcontext_cmd.slice(0, -1).toLocaleLowerCase()];
   if ((last_match === null) && global_match) {
-    // last user prompt does not contain a not_context command
-    // add the global not_context command to the prompt
+    // 最后一个用户提示不包含 not_context 命令
+    // 将全局 not_context 命令添加到提示中
     prompt += '\n' + global_match;
   }
 
-  return {prompt, search, notes, context, not_context};
+  return { prompt, search, notes, context, not_context };
 }
 
 function get_global_commands(text: string): ParsedData {
-  // define a regex pattern to match the code block
+  // 定义一个正则表达式模式来匹配代码块
   const cmd_block_match: RegExpMatchArray | null = text.match(cmd_block_pattern);
 
-  // if no code block is found, return an empty object and the original string
+  // 如果没有找到代码块，则返回一个空对象和原始字符串
   if (!cmd_block_match) return {};
 
   const cmd_block: string = cmd_block_match[0];
 
-  // remove the opening and closing tags
-  const cleaned_cmd_block: string = cmd_block.replace(/```jarvis|\```/g, '');
+  // 移除开始和结束标签
+  const cleaned_cmd_block: string = cmd_block.replace(/jarvis|/g, '');
 
-  // split into lines
+  // 按行分割
   const lines: string[] = cleaned_cmd_block.split('\n');
 
-  // define an object to store the parsed data
+  // 定义一个对象来存储解析后的数据
   let parsed_data: ParsedData = {};
 
-  // iterate over each line and parse the key/value pairs
+  // 遍历每一行并解析键/值对
   lines.forEach((line: string) => {
-    // Skip if line doesn't contain a colon
+    // 如果行中不包含冒号，则跳过
     if (!line.includes(':')) return;
 
     let split_line: string[] = line.split(':');
@@ -279,22 +278,22 @@ function get_global_commands(text: string): ParsedData {
 }
 
 export async function replace_selection(text: string) {
-	// this works with the rich text editor and CodeMirror 5/6
+  // 这适用于富文本编辑器和 CodeMirror 5/6
   await joplin.commands.execute('replaceSelection', text);
 
-  // wait for 0.5 sec for the note to update
+  // 等待 0.5 秒以更新笔记
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  // cleanup note from phrases
+  // 清理笔记中的短语
   const phrases = [
-    '\n\nGenerating response...',
-    '\n\nGenerating notes response...',
-    '\n\nGenerating auto-completion....'
+    '\n\n生成响应中...',
+    '\n\n生成笔记响应中...',
+    '\n\n生成自动补全中....'
   ];
   if (!phrases.includes(text)) {
     const note = await joplin.workspace.selectedNote();
 
-    let newBody = note.body
+    let newBody = note.body;
     for (const phrase of phrases) {
       newBody = newBody.replace(phrase, '');
     }

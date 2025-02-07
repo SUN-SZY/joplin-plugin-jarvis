@@ -5,9 +5,9 @@ import { JarvisSettings } from './settings';
 export async function register_panel(panel: string, settings: JarvisSettings, model: any) {
   let model_str = '';
   if (model.model === null) {
-    model_str = 'Model could not be loaded.'
+    model_str = '模型加载失败。'
     if (!model.online) {
-      model_str += `Note that ${model.id} runs completely locally, but requires network access in order to load the model.`;
+      model_str += `请注意，${model.id} 完全本地运行，但需要网络访问才能加载模型。`;
     }
   }
   await joplin.views.panels.addScript(panel, 'ux/webview.css');
@@ -16,8 +16,8 @@ export async function register_panel(panel: string, settings: JarvisSettings, mo
 }
 
 export async function update_panel(panel: string, nearest: NoteEmbedding[], settings: JarvisSettings) {
-  // TODO: collapse according to settings
-  let search_box = '<p align="center"><input class="jarvis-semantic-query" type="search" id="jarvis-search" placeholder="Semantic search..."></p>';
+  // TODO: 根据设置折叠
+  let search_box = '<p align="center"><input class="jarvis-semantic-query" type="search" id="jarvis-search" placeholder="语义搜索..."></p>';
   if (!settings.notes_search_box) { search_box = ''; }
 
   await joplin.views.panels.setHtml(panel, `
@@ -35,7 +35,7 @@ export async function update_panel(panel: string, nearest: NoteEmbedding[], sett
       <div class="jarvis-semantic-section" >
       ${n.embeddings.map((embd) => `
         <a class="jarvis-semantic-section" href="#" data-note="${embd.id}" data-line="${embd.line}">
-        (${(100 * embd.similarity).toFixed(0)}) L${String(embd.line).padStart(4, '0')}: ${embd.title}
+        (${(100 * embd.similarity).toFixed(0)}) 行${String(embd.line).padStart(4, '0')}: ${embd.title}
         </a><br>
       `).join('')}
       </div>
@@ -50,9 +50,9 @@ export async function update_progress_bar(panel: string, processed: number, tota
   <html>
   <div class="container">
     <p class="jarvis-semantic-title">${settings.notes_panel_title}</p>
-    <p class="jarvis-semantic-note">Updating note database...</p>
+    <p class="jarvis-semantic-note">正在更新笔记数据库...</p>
     <progress class="jarvis-semantic-progress" value="${processed}" max="${total}"></progress>
-    <p class="jarvis-semantic-note">Total notes processed: ${processed} / ${total}</p>
+    <p class="jarvis-semantic-note">已处理的笔记总数: ${processed} / ${total}</p>
   </div>
   `);
 }

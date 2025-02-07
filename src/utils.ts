@@ -3,7 +3,7 @@ import joplin from 'api';
 export function with_timeout(msecs: number, promise: Promise<any>): Promise<any> {
   const timeout = new Promise((resolve, reject) => {
     setTimeout(() => {
-      reject(new Error("timeout"));
+      reject(new Error("超时"));
     }, msecs);
   });
   return Promise.race([timeout, promise]);
@@ -14,36 +14,35 @@ export async function timeout_with_retry(msecs: number,
   try {
     return await with_timeout(msecs, promise_func());
   } catch (error) {
-    const choice = await joplin.views.dialogs.showMessageBox(`Error: Request timeout (${msecs / 1000} sec).\nPress OK to retry.`);
+    const choice = await joplin.views.dialogs.showMessageBox(`错误: 请求超时 (${msecs / 1000} 秒).\n点击确定重试。`);
     if (choice === 0) {
-      // OK button
+      // 确定按钮
       return await timeout_with_retry(msecs, promise_func);
     }
-    // Cancel button
+    // 取消按钮
     return default_value;
   }
 }
 
-// provide a text split into paragraphs, sentences, words, etc,
-// or even a complete [text] (and then split_by is used).
-// return a 2D array where in each row the total token sum is
-// less than max_tokens.
-// optionally, select from the end of the text (prefer = 'last').
+// 提供一个按段落、句子、单词等分割的文本，
+// 或者是一个完整的 [text]（然后使用 split_by 进行分割）。
+// 返回一个二维数组，其中每一行的总标记数小于 max_tokens。
+// 可选地，从文本末尾选择（prefer = 'last'）。
 export function split_by_tokens(
   parts: Array<string>,
   model: { count_tokens: (text: string) => number },
   max_tokens: number,
   prefer: string = 'first',
-  split_by: string = ' ',  // can be null to split by characters
+  split_by: string = ' ',  // 可以为 null 以按字符分割
 ): Array<Array<string>> {
 
-  // preprocess parts to ensure each part is smaller than max_tokens
+  // 预处理部分以确保每个部分小于 max_tokens
   function preprocess(part: string): Array<string> {
     const token_count = model.count_tokens(part);
 
     if (token_count <= max_tokens) { return [part]; }
 
-    // split the part in half
+    // 将部分分成两半
     let part_arr: any = part;
     const use_regex = (split_by !== null) &&
                       (part.split(split_by).length > 1);
@@ -68,21 +67,21 @@ export function split_by_tokens(
 
   const small_parts = parts.map(preprocess).flat();
 
-  // get the token sum of each text
+  // 获取每个文本的标记总数
   const token_counts = small_parts.map(text => model.count_tokens(text));
   if (prefer === 'last') {
     token_counts.reverse();
     small_parts.reverse();
   }
 
-  // merge parts until the token sum is greater than max_tokens
+  // 合并部分，直到标记总数大于 max_tokens
   let selected: Array<Array<string>> = [];
   let token_sum = 0;
   let current_selection: Array<string> = [];
 
   for (let i = 0; i < token_counts.length; i++) {
     if (token_sum + token_counts[i] > max_tokens) {
-      // return the accumulated texts based on the prefer option
+      // 根据 prefer 选项返回累积的文本
       if (prefer === 'last') {
         current_selection.reverse();
       }
@@ -96,7 +95,7 @@ export function split_by_tokens(
   }
 
   if (current_selection.length > 0) {
-    // return the accumulated texts based on the prefer option
+    // 根据 prefer 选项返回累积的文本
     if (prefer === 'last') {
       current_selection.reverse();
     }
@@ -109,20 +108,20 @@ export function split_by_tokens(
 export async function consume_rate_limit(
     model: { requests_per_second: number, request_queue: Array<any>, last_request_time: number }) {
   /*
-    1. Each embed() call creates a request_promise and adds a request object to the requestQueue.
-    2. The consume_rate_limit() method is called for each embed() call.
-    3. The consume_rate_limit() method checks if there are any pending requests in the requestQueue.
-    4. If there are pending requests, the method calculates the necessary wait time based on the rate limit and the time elapsed since the last request.
-    5. If the calculated wait time is greater than zero, the method waits using setTimeout() for the specified duration.
-    6. After the wait period, the method processes the next request in the requestQueue by shifting it from the queue and resolving its associated promise.
-    7. The resolved promise allows the corresponding embed() call to proceed further and generate the embedding for the text.
-    8. If there are additional pending requests in the requestQueue, the consume_rate_limit() method is called again to handle the next request in the same manner.
-    9. This process continues until all requests in the requestQueue have been processed.
+    1. 每个 embed() 调用都会创建一个 request_promise 并将请求对象添加到 requestQueue。
+    2. 对于每个 embed() 调用，都会调用 consume_rate_limit() 方法。
+    3. consume_rate_limit() 方法检查 requestQueue 中是否有待处理的请求。
+    4. 如果有待处理的请求，方法会根据速率限制和自上次请求以来经过的时间计算必要的等待时间。
+    5. 如果计算出的等待时间大于零，方法会使用 setTimeout() 等待指定的持续时间。
+    6. 等待期结束后，方法通过从队列中移除并解决相关 promise 来处理 requestQueue 中的下一个请求。
+    7. 解决的 promise 允许相应的 embed() 调用继续进行并为文本生成嵌入。
+    8. 如果 requestQueue 中有其他待处理的请求，consume_rate_limit() 方法会再次调用以处理下一个请求。
+    9. 此过程会一直持续到 requestQueue 中的所有请求都被处理。
   */
   const now = Date.now();
   const time_elapsed = now - model.last_request_time;
 
-  // calculate the time required to wait between requests
+  // 计算请求之间的等待时间
   const wait_time = model.request_queue.length * (1000 / model.requests_per_second);
 
   if (time_elapsed < wait_time) {
@@ -131,35 +130,35 @@ export async function consume_rate_limit(
 
   model.last_request_time = now;
 
-  // process the next request in the queue
+  // 处理队列中的下一个请求
   if (model.request_queue.length > 0) {
     const request = model.request_queue.shift();
-    request.resolve(); // resolve the request promise
+    request.resolve(); // 解决请求 promise
   }
 }
 
 export function search_keywords(text: string, query: string): boolean {
-  // split the query into words/phrases
+  // 将查询拆分为单词/短语
   const parts = preprocess_query(query).match(/"[^"]+"|\S+/g) || [];
 
-  // build regular expression patterns for words/phrases
+  // 构建单词/短语的正则表达式模式
   const patterns = parts.map(part => {
       if (part.startsWith('"') && part.endsWith('"')) {
-        // match exact phrase
+        // 匹配确切短语
         return `(?=.*\\b${part.slice(1, -1)}\\b)`;
       } else if (part.endsWith('*')) {
-        // match prefix (remove the '*' and don't require a word boundary at the end)
+        // 匹配前缀（移除 '*' 并不要求末尾的单词边界）
         return `(?=.*\\b${part.slice(0, -1)})`;
       } else {
-        // match individual keywords
+        // 匹配单个关键词
         return `(?=.*\\b${part}\\b)`;
       }
   });
 
-  // combine patterns into a single regular expression
+  // 将模式组合成一个单一的正则表达式
   const regex = new RegExp(patterns.join(''), 'is');
 
-  // return true if all keywords/phrases are found, false otherwise
+  // 如果所有关键词/短语都被找到，则返回 true，否则返回 false
   return regex.test(text);
 }
 
@@ -171,15 +170,15 @@ function preprocess_query(query: string) {
     'sourceurl', 'id'
   ];
 
-  // build a regex pattern to match <operator>:<keyword>
+  // 构建匹配 <operator>:<keyword> 的正则表达式模式
   const regexPattern = new RegExp(`\\b(?:${operators.join('|')}):\\S+`, 'g');
 
-  // remove <operator>:<keyword> patterns from the query
+  // 从查询中移除 <operator>:<keyword> 模式
   return query.replace(regexPattern, '').trim();
 }
 
 export async function get_all_tags(): Promise<Array<string>> {
-  // TODO: get only *used* tags based on all notes
+  // TODO: 获取所有笔记中使用的 *标签*
   const tags: Array<string> = [];
   let page = 0;
   let some_tags: any;
@@ -196,16 +195,16 @@ export async function get_all_tags(): Promise<Array<string>> {
 
 export function escape_regex(string: string): string {
   return string
-    .replace(/---/g, '')  // ignore dividing line
+    .replace(/---/g, '')  // 忽略分隔线
     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     .trim();
 }
 
-// replace the last occurrence of a pattern in a string
+// 替换字符串中最后一次出现的模式
 export function replace_last(str: string, pattern: string, replacement: string): string {
   const index = str.lastIndexOf(pattern);
-  if (index === -1) return str;  // Pattern not found, return original string
+  if (index === -1) return str;  // 模式未找到，返回原始字符串
 
-  // Construct the new string
+  // 构造新字符串
   return str.substring(0, index) + replacement + str.substring(index + pattern.length);
 }

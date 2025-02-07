@@ -1,10 +1,10 @@
 label,value,tokens
-Paragraph,Scope: one paragraph.,5.25
-2-3 Paragraphs,Scope: 2-3 paragraphs.,5.5
-4-5 Paragraphs,Scope: 4-5 paragraphs.,5.5
-5 items,Scope: bullet list of 5 items in each section. make sure to include details for each item. use markdown format.,27.75
-10 items,Scope: bullet list of 10 items in each section. make sure to include details for each item. use markdown format.,28
-Email,Scope: an email that includes a subject line and the content.,15.25
-Blog post,"Scope: blog post that has an introduction, 3 topic paragraphs, and a conclusion.",20
-Essay,Scope: essay.,3.25
-Article,Scope: article.,3.75
+一段,范围：一段。,5.25
+2-3 段落,范围：2-3 段。,5.5
+4-5 段落,范围：4-5 段。,5.5
+5 个项目,范围：每个部分中 5 个项目的项目符号列表。确保包含每个项目的详细信息。使用 Markdown 格式。,27.75
+10 个条目,范围：每个部分中 10 个项目的项目符号列表。确保包含每个项目的详细信息。使用 Markdown 格式。,28
+电子邮件,范围：包含主题行和内容的电子邮件。,15.25
+博客文章,"范围：包含引言、3 个主题段落和结论的博客文章。",20
+随笔,范围：论文。,3.25
+文章,范围：文章。,3.75

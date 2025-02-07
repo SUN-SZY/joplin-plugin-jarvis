@@ -1,118 +1,118 @@
 label,value,tokens
-Help Me Write,"You are helping a user write content based on a prompt. Output in markdown format. Do not use links. Do not include literal content from the given prompt.
-Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+帮我写,"您正在帮助用户根据提示编写内容。以 markdown 格式输出。不要使用链接。不要包含给定提示符中的文字内容。
+使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-Output in [Identified language of the prompt]: 
-[Output based on the prompt, in markdown format.]",89.5
-Continue Writing,"You are helping a user write content based on a prompt. Output how the prompt continues. Output in markdown format. Do not use links.
-Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
+以 [提示的识别语言] 输出：
+[根据提示输出，以 markdown 格式输出。]",89.5
+继续写作,"您正在帮助用户根据提示编写内容。输出提示的继续方式。以 markdown 格式输出。不要使用链接。
+使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-Continuation in [Identified language of the prompt]:
-[Continuation of the prompt in markdown format]",84.75
-Write Code,You are helping a user write code based on a prompt in [identified programming language]. Generate the code while adding explanations in the comments. Demonstrate how to run the code on an example input.,50.75
-Explain Code,You are helping a user understand the code given in the prompt. Try to identify the language of the code if it is not explicitly specified. Describe what the code does and how it works. Notify the user on possible bugs in the code. Demonstrate how to run the code on an example input.,71
-Brainstorm Ideas,"You are helping brainstorm a list of ideas inside a document.
-Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
-Write ideas based on the topic, in [Identified language of the prompt]:",59.25
-Give Examples,"You are helping listing examples that match the prompt.
-Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
-Write examples based on the topic, in [Identified language of the prompt]:",58.5
-Summarize,"You are helping summarize a document. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[提示的已识别语言] 中的延续:
+[以 markdown 格式继续提示]",84.75
+编写代码,您正在帮助用户根据 [已识别的编程语言] 中的提示编写代码。在注释中添加解释时生成代码。演示如何在示例输入上运行代码。,50.75
+解释代码,您正在帮助用户理解提示中给出的代码。如果未明确指定，请尝试识别代码的语言。描述代码的作用及其工作原理。通知用户代码中可能存在的 bug。演示如何在示例输入上运行代码。,71
+头脑风暴想法,"您正在帮助集思广益，在文档中列出一系列想法。
+使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
+根据主题编写想法,在 [提示的识别语言] 中:",59.25
+举例,"您正在帮助列出与提示匹配的示例.
+使用此格式, 将括号中的文本替换为结果。不要在输出中包含括号:
+根据主题编写示例，使用 [提示的识别语言]:",58.5
+总结,"您正在帮助汇总文档。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-Summary in [Identified language of the document]: 
+[文档的已识别语言] 摘要:
 
-[The document using the identified language.].",60.5
-Find Inconsistencies,You are helping the use find and correct inconsistencies and contradictions in a document. Report on any that you find. Also fact-check the content of the document.,41
-Find Action Items,"You are helping find action items inside a document. An action item is an extracted task or to-do found inside of an unstructured document. Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
+[使用已识别语言的文档。.",60.5
+查找不一致,您正在帮助 用戶 查找和更正文档中的不一致和矛盾。报告您找到的任何内容。还要对文件的内容进行事实核查。,41
+查找作项,"您正在帮助查找文档中的措施项。措施项是在非结构化文档中找到的提取任务或待办事项。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-List of action items in [Identified language of the document]:
-[List of action items in the identified language, in markdown format. Prefix each line with ""- []"" to make it a checkbox.]",107.5
-Pros and Cons List,"You are helping to generate a list of pros and cons about a topic. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[文档的已识别语言] 中的作项列表:
+[以已识别语言显示的行动项列表, 以 Markdown 格式。在每行前加上 ""- []"" 将其设为复选框。]",107.5
+优点和缺点列表,"您正在帮助生成有关某个主题的优缺点列表。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-Pros and cons in [Identified language of the topic]: 
+[主题的已识别语言] 的优缺点:
 
-## [""Pros"" in the identified language] 
+## [""优点"" 以识别的语言]
 
-[List of pros, one sentence each.] 
+[列表 优点, 每人一句话。]
 
-## [""Cons"" in the identified language] 
+## [""缺点"" 以识别的语言]
 
-[List of cons, one sentence each.]",95.25
-Social Media Post,"You are helping to draft a social media post. Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
+[列表 缺点, 每人一句话。]",95.25
+社交媒体帖子,"您正在帮助起草社交媒体帖子。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-Post in [Identified language of the topic]:
-  
-# [Title]
-  
-[post body] 
- 
-Tags: [List of relevant #hashtags]",65
-Outline,"You are helping to draft an outline for a document. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+以 [主题的已识别语言] 发布:
 
-Outline in [Identified language of the topic]: 
+# [标题]
 
-# [Title of document] 
-[Bulleted list outline of document, in markdown format]",71.25
-Creative Story,"You are helping to write a creative story. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[帖子正文]
 
-Story in [Identified language of the topic]: 
+Tags: [相关 #hashtags 列表]",65
+大纲,"您正在帮助起草文档的大纲。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-# [Title of story] 
-[Beginning of story]",59
-Poem,"You are helping to write a poem. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[主题的已识别语言] 中的大纲:
 
-Poem in [Identified language of the topic]: 
+# [文件标题]
+[文档的项目符号列表大纲，采用 Markdown 格式]",71.25
+创意故事,"您正在帮助编写一个创意故事。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-# [Title of poem] 
-[Poem, at least 4 lines]",57
-Meeting Agenda,"You are helping to write a meeting agenda. 
-Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[主题的已识别语言] 中的故事:
 
-Meeting agenda in [Identified language of the topic]: 
+# [故事标题]
+[故事的开始]",59
+诗,"你在帮忙写一首诗。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-# [Meeting name] 
+[主题的已识别语言] 的诗歌:
 
-[Introduction paragraph about the purpose and goals of the meeting] 
+# [诗名]
+[诗歌，四言或者七律等诗歌题裁]",57
+会议议程,"您正在帮助编写会议议程。
+使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-[Meeting topics.]",78
-Press Release,"You are helping to draft a press release. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[主题确定的语言] 的会议议程:
 
-Press release in [Identified language of the topic]: 
+# [会议名称]
 
-# [Press release headline] 
-[Press release body, in markdown format.] ",68.25
-Job Description,"You are helping to draft a job description. Use this format, replacing text in brackets with the result. Do not include the brackets in the output: 
+[关于会议目的和目标的介绍段落]
 
-Job description in [Identified language of the prompt]: 
+[会议主题]",78
+新闻稿,"您正在帮助起草新闻稿。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-# [Job title] 
+[主题确定的语言] 的新闻稿:
 
-## [""Overview"", in the identified language] 
+# [新闻发布标题]
+[新闻稿正文，Markdown 格式。] ",68.25
+职位描述,"您正在帮助起草职位描述。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-[Overview of job, one paragraph] 
+[提示的识别语言] 中的作业描述:
 
-## [""Responsibilities"", in the identified language] 
+# [职称]
 
-[Description of responsibilities] 
+## [""概述"", 以识别的语言]
 
-## [""Qualifications"", in the identified language] 
+[工作概述，1 段]
 
-[Description of qualifications]",119.5
-Sales Email,"You are helping to draft a personalized sales email. Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
+## [""岗位职责"", 以识别的语言]
 
-Output in [Identified language of the prompt]: 
+[职责描述]
 
-# [Sales email title]
+## [""任职资格"", 以识别的语言]
 
-[Sales email subject]
+【任职资格说明】",119.5
+销售电子邮件,"您正在帮助起草一封个性化的销售电子邮件。使用此格式，将括号中的文本替换为结果。不要在输出中包含括号:
 
-[Sales email body]",67.75
-Recruiting Email,"You are helping to draft a personalized recruiting email. Use this format, replacing text in brackets with the result. Do not include the brackets in the output:
-  
-Recruiting email in [Identified language of the notes]:
-        
-# [Recruiting email title]
-  
-[Recruiting email subject]
+以 [提示的已识别语言] 输出:
 
-[Recruiting email body]",77.75
+# [销售电子邮件标题]
+
+[销售电子邮件主题]
+
+[销售电子邮件正文]",67.75
+招聘电子邮件,"您正在帮助起草一封个性化的招聘电子邮件。使用此格式，将括号中的文本替换为结果。请勿在输出中包含括号：
+
+以 [备注的已识别语言] 发送招聘电子邮件:
+
+# [招聘电子邮件标题]
+
+[招聘邮件主题]
+
+[招聘电子邮件正文]",77.75

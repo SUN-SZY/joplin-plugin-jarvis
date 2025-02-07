@@ -2,11 +2,11 @@ import joplin from 'api';
 import { SettingItemType } from 'api/types';
 import prompts = require('../assets/prompts.json');
 
-export const ref_notes_prefix = 'Ref notes:';
-export const search_notes_cmd = 'Search:';
-export const user_notes_cmd = 'Notes:';
-export const context_cmd = 'Context:';
-export const notcontext_cmd = 'Not context:';
+export const ref_notes_prefix = '引用笔记:';
+export const search_notes_cmd = '搜索:';
+export const user_notes_cmd = '笔记:';
+export const context_cmd = '上下文:';
+export const notcontext_cmd = '非上下文:';
 export const title_separator = ' ::: ';
 
 export interface JarvisSettings {
@@ -108,31 +108,31 @@ export const search_engines: { [engine: string] : string; } = {
 
 export const search_prompts: { [engine: string] : string; } = {
   'Scopus': `
-    next, generate a few valid Scopus search queries, based on the questions and prompt, using standard Scopus operators.
-    try to use various search strategies in the multiple queries. for example, if asked to compare topics A and B, you could search for ("A" AND "B"),
-    and you could also search for ("A" OR "B") and then compare the results.
-    only if explicitly required in the prompt, you can use additional operators to filter the results, like the publication year, language, subject area, or DOI (when provided).
-    try to keep the search queries short and simple, and not too specific (consider ambiguities).`,
+    接下来，根据问题和提示生成几个有效的 Scopus 搜索查询，使用标准的 Scopus 操作符。
+    尝试使用多种搜索策略。例如，如果要求比较主题 A 和 B，可以搜索 ("A" AND "B")，
+    也可以搜索 ("A" OR "B") 然后比较结果。
+    仅在提示中明确要求时，可以使用其他操作符来过滤结果，如出版年份、语言、学科领域或 DOI（如果提供）。
+    尽量保持搜索查询简短且不具体（考虑模糊性）。`,
   'Semantic Scholar': `
-    next, generate a few valid Semantic Scholar search queries, based on the questions and prompt, by concatenating with "+" a few keywords.
-    try to use various search strategies in the multiple queries. for example, if asked to compare topics A and B, you could search for A+B,
-    and you could also search for A or B in separate queries and then compare the results.
-    only if explicitly required in the prompt, you can use additional fields to filter the results, such as &year=, &publicationTypes=, &fieldsOfStudy=.
-    keep the search queries short and simple.`,
+    接下来，根据问题和提示生成几个有效的 Semantic Scholar 搜索查询，通过用 "+" 连接几个关键词。
+    尝试使用多种搜索策略。例如，如果要求比较主题 A 和 B，可以搜索 A+B，
+    也可以分别搜索 A 或 B 然后比较结果。
+    仅在提示中明确要求时，可以使用其他字段来过滤结果，如 &year=, &publicationTypes=, &fieldsOfStudy=。
+    保持搜索查询简短且不具体。`,
 };
 
-const title_prompt = `Summarize the following note in a title that contains a single sentence in {preferred_language} which encapsulates the note's main conclusion or idea.`;
-const summary_prompt = `Summarize the following note in a short paragraph in {preferred_language} that contains 2-4 sentences which encapsulates the note's main conclusion or idea in a concise way.`;
+const title_prompt = `将以下笔记总结为一个句子的标题，该句子用 {preferred_language} 表达，并且能够概括笔记的主要结论或想法。`;
+const summary_prompt = `将以下笔记总结为一个简短段落，用 {preferred_language} 表达，包含 2-4 句话，能够以简洁的方式概括笔记的主要结论或想法。`;
 const tags_prompt = {
-  'unsupervised': `Suggest keywords for the following note, based on its content. The keywords should make the note easier to find, and should be short and concise (perferably *single-word* keywords). Also select one keyword that describes the note type (such as: article, diary, review, guide, project, etc.). List all keywords in a single line, separated by commas.`,
-  'from_list': `Suggest keywords for the following note, based on its content. The keywords should make the note easier to find, and should be short and concise. THIS IS IMPORTANT: You may only suggest keywords from the bank below.`,
-  'from_notes': `Suggest keywords for the following note, based on its content. The keywords should make the note easier to find, and should be short and concise. Below are a few examples for notes with similar content, and their keywords. You may only suggest keywords from the examples given below.`,
+  'unsupervised': `根据内容为以下笔记建议关键词，这些关键词应使笔记更容易找到，并且应简短且简洁（首选单个词关键词）。另外选择一个描述笔记类型的关键词（例如：文章、日记、评论、指南、项目等）。将所有关键词放在一行中，用逗号分隔。`,
+  'from_list': `根据内容为以下笔记建议关键词，这些关键词应使笔记更容易找到，并且应简短且简洁。重要的是：您只能从下面的银行中建议关键词。`,
+  'from_notes': `根据内容为以下笔记建议关键词，这些关键词应使笔记更容易找到，并且应简短且简洁。下面是一些内容相似的笔记及其关键词示例。您只能从下面的示例中建议关键词。`,
 };
 
 export function parse_dropdown_json(json: any, selected?: string): string {
   let options = '';
   for (let [key, value] of Object.entries(json)) {
-    // add "selected" if value equals selected
+    // 添加 "selected" 如果 value 等于 selected
     if (selected && value == selected) {
       options += `<option value="${value}" selected>${key}</option>`;
     } else {
@@ -157,15 +157,15 @@ export async function get_settings(): Promise<JarvisSettings> {
   let model_id = await joplin.settings.value('model');
   if (model_id == 'openai-custom') {
     model_id = await joplin.settings.value('chat_openai_model_id');
-    model_id = model_id.replace(/-\d{4}$/, '');  // remove the date suffix
+    model_id = model_id.replace(/-\d{4}$/, '');  // 移除日期后缀
   }
-  // if model is in model_max_tokens, use its value, otherwise use the settings value
+  // 如果模型在 model_max_tokens 中，使用其值，否则使用设置值
   let max_tokens = model_max_tokens[model_id] || await joplin.settings.value('max_tokens');
 
   let memory_tokens = await joplin.settings.value('memory_tokens');
   let notes_context_tokens = await joplin.settings.value('notes_context_tokens');
   if (memory_tokens + notes_context_tokens > 0.9*max_tokens) {
-    joplin.views.dialogs.showMessageBox(`Memory tokens (${memory_tokens}) + Context tokens (${notes_context_tokens}) must be < 90% of the maximum number of tokens. The settings have been updated (${Math.floor(0.45*max_tokens)}, ${Math.floor(0.45*max_tokens)}).`);
+    joplin.views.dialogs.showMessageBox(`内存标记 (${memory_tokens}) + 上下文标记 (${notes_context_tokens}) 必须小于最大标记数的 90%。设置已更新 (${Math.floor(0.45*max_tokens)}, ${Math.floor(0.45*max_tokens)})。`);
     memory_tokens = Math.floor(0.45*max_tokens);
     notes_context_tokens = Math.floor(0.45*max_tokens);
     await joplin.settings.setValue('notes_context_tokens', notes_context_tokens);
@@ -266,19 +266,19 @@ export async function get_settings(): Promise<JarvisSettings> {
 
 export async function register_settings() {
   await joplin.settings.registerSection('jarvis.chat', {
-    label: 'Jarvis: Chat',
+    label: 'Jarvis: 聊天',
     iconName: 'fas fa-robot',
   });
   await joplin.settings.registerSection('jarvis.notes', {
-    label: 'Jarvis: Related Notes',
+    label: 'Jarvis: 相关笔记',
     iconName: 'fas fa-robot',
   });
   await joplin.settings.registerSection('jarvis.annotate', {
-    label: 'Jarvis: Annotations',
+    label: 'Jarvis: 注释',
     iconName: 'fas fa-robot',
   });
   await joplin.settings.registerSection('jarvis.research', {
-    label: 'Jarvis: Research',
+    label: 'Jarvis: 研究',
     iconName: 'fas fa-robot',
   });
 
@@ -289,7 +289,7 @@ export async function register_settings() {
       secure: true,
       section: 'jarvis.chat',
       public: true,
-      label: 'Model: OpenAI API Key',
+      label: '模型: OpenAI API 密钥',
     },
     'hf_api_key': {
       value: 'YOUR_HF_API_KEY',
@@ -297,7 +297,7 @@ export async function register_settings() {
       secure: true,
       section: 'jarvis.chat',
       public: true,
-      label: 'Model: Hugging Face API Key',
+      label: '模型: Hugging Face API 密钥',
     },
     'google_api_key': {
       value: 'YOUR_GOOGLE_API_KEY',
@@ -305,7 +305,7 @@ export async function register_settings() {
       secure: true,
       section: 'jarvis.chat',
       public: true,
-      label: 'Model: Google AI API Key',
+      label: '模型: Google AI API 密钥',
     },
     'model': {
       value: 'gpt-4o-mini',
@@ -313,17 +313,17 @@ export async function register_settings() {
       isEnum: true,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Model',
-      description: 'The model to ask / chat / research with Jarvis. Default: gpt-4o-mini',
+      label: '聊天: 模型',
+      description: '与 Jarvis 对话/聊天/研究的模型。默认: gpt-4o-mini',
       options: {
-        'gpt-4o-mini':'(online) OpenAI: gpt-4o-mini (128K, cheapest)',
-        'gpt-4o': '(online) OpenAI: gpt-4o (128K, stronger)',
-        'gpt-3.5-turbo': '(online) OpenAI: gpt-3.5-turbo (16K, legacy)',
-        'gpt-3.5-turbo-instruct': '(online) OpenAI: gpt-3.5-turbo-instruct (4K)',
-        'openai-custom': '(online/offline) OpenAI or compatible: custom model',
-        'gemini-1.0-pro-latest': '(online) Google AI: gemini-1.0-pro-latest (30K)',
-        'gemini-1.5-pro-latest': '(online) Google AI: gemini-1.5-pro-latest (1M)',
-        'Hugging Face': '(online) Hugging Face',
+        'gpt-4o-mini':'(在线) OpenAI: gpt-4o-mini (128K, 最便宜)',
+        'gpt-4o': '(在线) OpenAI: gpt-4o (128K, 更强大)',
+        'gpt-3.5-turbo': '(在线) OpenAI: gpt-3.5-turbo (16K, 旧版)',
+        'gpt-3.5-turbo-instruct': '(在线) OpenAI: gpt-3.5-turbo-instruct (4K)',
+        'openai-custom': '(在线/离线) OpenAI 或兼容: 自定义模型',
+        'gemini-1.0-pro-latest': '(在线) Google AI: gemini-1.0-pro-latest (30K)',
+        'gemini-1.5-pro-latest': '(在线) Google AI: gemini-1.5-pro-latest (1M)',
+        'Hugging Face': '(在线) Hugging Face',
       }
     },
     'chat_timeout': {
@@ -335,17 +335,17 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: Timeout (sec)',
-      description: 'The maximal time to wait for a response from the model in seconds. Default: 60',
+      label: '聊天: 超时 (秒)',
+      description: '等待模型响应的最大时间（秒）。默认: 60',
     },
     'chat_system_message': {
-      value: 'You are Jarvis, the helpful assistant, and I am User.',
+      value: '你就是 Jarvis，乐于助人的助手，而我是用户。',
       type: SettingItemType.String,
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: System message',
-      description: 'The message to inform Jarvis who he is, what is his purpose, and more information about the user. Default: You are Jarvis, the helpful assistant, and I am User.',
+      label: '聊天: 系统消息',
+      description: '告知 Jarvis 他是谁、他的目的以及更多关于用户的信息的消息。默认: 你就是 Jarvis，乐于助人的助手，而我是用户。',
     },
     'chat_openai_model_id': {
       value: '',
@@ -353,8 +353,8 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: OpenAI (or compatible) custom model ID',
-      description: 'The OpenAI model ID to use for text generation. Default: empty',
+      label: '聊天: OpenAI（或兼容）自定义模型 ID',
+      description: '用于文本生成的 OpenAI 模型 ID。默认: 空',
     },
     'chat_openai_model_type': {
       value: true,
@@ -362,8 +362,8 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: Custom model is a conversation model',
-      description: 'Whether to use the conversation API or the legacy completion API. Default: false',
+      label: '聊天: 自定义模型是否为对话模型',
+      description: '是否使用对话 API 或旧版完成 API。默认: false',
     },
     'chat_openai_endpoint': {
       value: '',
@@ -371,8 +371,8 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: Custom model API endpoint',
-      description: "The OpenAI (or compatible) API endpoint to use for text generation. Default: empty (OpenAI's default public endpoint)",
+      label: '聊天: 自定义模型 API 端点',
+      description: "用于文本生成的 OpenAI（或兼容）API 端点。默认为空（OpenAI 的默认公共端点）",
     },
     'chat_hf_model_id': {
       value: 'MBZUAI/LaMini-Flan-T5-783M',
@@ -380,8 +380,8 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: Hugging Face text generation model ID',
-      description: 'The Hugging Face model ID to use for text generation. Default: MBZUAI/LaMini-Flan-T5-783M',
+      label: '聊天: Hugging Face 文本生成模型 ID',
+      description: '用于文本生成的 Hugging Face 模型 ID。默认: MBZUAI/LaMini-Flan-T5-783M',
     },
     'chat_hf_endpoint': {
       value: '',
@@ -389,8 +389,8 @@ export async function register_settings() {
       section: 'jarvis.chat',
       public: true,
       advanced: true,
-      label: 'Chat: Hugging Face API endpoint',
-      description: "The Hugging Face API endpoint to use for text generation. Default: empty (HF's default public endpoint)",
+      label: '聊天: Hugging Face API 端点',
+      description: "用于文本生成的 Hugging Face API 端点。默认为空（Hugging Face 的默认公共端点）",
     },
     'temp': {
       value: 10,
@@ -400,8 +400,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Temperature',
-      description: 'The temperature of the model. 0 is the least creative. 20 is the most creative. Higher values produce more creative results, but can also result in more nonsensical text. Default: 10',
+      label: '聊天: 温度',
+      description: '模型的温度。0 是最不具创造性的，20 是最具创造性的。较高的值会产生更具创造性的结果，但也可能导致更无意义的文本。默认: 10',
     },
     'max_tokens': {
       value: 2048,
@@ -411,8 +411,8 @@ export async function register_settings() {
       step: 128,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Max tokens',
-      description: 'The maximal context length of the selected text generation / chat model. This parameter is only used for custom models where the default context length is unknown. Default: 2048',
+      label: '聊天: 最大标记数',
+      description: '所选文本生成/聊天模型的最大上下文长度。此参数仅用于默认上下文长度未知的自定义模型。默认: 2048',
     },
     'memory_tokens': {
       value: 512,
@@ -422,8 +422,8 @@ export async function register_settings() {
       step: 128,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Memory tokens',
-      description: 'The context length to keep in memory when chatting with Jarvis. Higher values may result in more coherent conversations. Must be lower than 45% of max_tokens. Default: 512',
+      label: '聊天: 内存标记数',
+      description: '与 Jarvis 聊天时保留在内存中的上下文长度。较高的值可能会产生更连贯的对话。必须小于最大标记数的 45%。默认: 512',
     },
     'top_p': {
       value: 100,
@@ -433,8 +433,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Top P',
-      description: 'An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p (between 0 and 100) probability mass. So 10 means only the tokens comprising the top 10% probability mass are considered. Default: 100',
+      label: '聊天: Top P',
+      description: '一种替代采样方法，称为核采样，其中模型考虑具有 top_p（介于 0 和 100 之间）概率质量的结果。因此，10 表示只考虑前 10% 概率质量的标记。默认: 100',
     },
     'frequency_penalty': {
       value: 0,
@@ -444,8 +444,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Frequency penalty',
-      description: "A value between -20 and 20. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim. Default: 0",
+      label: '聊天: 频率惩罚',
+      description: "一个介于 -20 和 20 之间的值。正值会根据标记在当前文本中的现有频率对新标记进行惩罚，从而降低模型重复相同行的可能性。默认: 0",
     },
     'presence_penalty': {
       value: 0,
@@ -455,16 +455,16 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Presence penalty',
-      description: "A value between -20 and 20. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics. Default: 0",
+      label: '聊天: 存在惩罚',
+      description: "一个介于 -20 和 20 之间的值。正值会根据标记是否出现在当前文本中对新标记进行惩罚，从而增加模型谈论新话题的可能性。默认: 0",
     },
     'include_prompt': {
       value: false,
       type: SettingItemType.Bool,
       section: 'jarvis.chat',
       public: true,
-      label: 'Chat: Include prompt in response',
-      description: 'Include the instructions given to the model in the output of Ask Jarvis. Default: false',
+      label: '聊天: 在响应中包含提示',
+      description: '在 Ask Jarvis 的输出中包含给模型的指令。默认: false',
     },
     'notes_model': {
       value: 'Universal Sentence Encoder',
@@ -472,18 +472,18 @@ export async function register_settings() {
       isEnum: true,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Semantic similarity model',
-      description: 'The model to use for calculating text embeddings. Default: (offline) Universal Sentence Encoder [English]',
+      label: '笔记: 语义相似性模型',
+      description: '用于计算文本嵌入的模型。默认: (离线) Universal Sentence Encoder [英语]',
       options: {
-        'Universal Sentence Encoder': '(offline) Universal Sentence Encoder [English]',
-        'Hugging Face': '(online) Hugging Face [Multilingual]',
-        'text-embedding-3-small': '(online) OpenAI: text-embedding-3-small [Multilingual]',
-        'text-embedding-3-large': '(online) OpenAI: text-embedding-3-large [Multilingual]',
-        'text-embedding-ada-002': '(online) OpenAI: text-embedding-ada-002 [Multilingual]',
-        'openai-custom': '(online) OpenAI or compatible: custom model',
-        'gemini-embedding-001': '(online) Google AI: embedding-001',
-        'gemini-text-embedding-004': '(online) Google AI: text-embedding-004',
-        'ollama': '(offline) Ollama',
+        'Universal Sentence Encoder': '(离线) Universal Sentence Encoder [英语]',
+        'Hugging Face': '(在线) Hugging Face [多语言]',
+        'text-embedding-3-small': '(在线) OpenAI: text-embedding-3-small [多语言]',
+        'text-embedding-3-large': '(在线) OpenAI: text-embedding-3-large [多语言]',
+        'text-embedding-ada-002': '(在线) OpenAI: text-embedding-ada-002 [多语言]',
+        'openai-custom': '(在线) OpenAI 或兼容: 自定义模型',
+        'gemini-embedding-001': '(在线) Google AI: embedding-001',
+        'gemini-text-embedding-004': '(在线) Google AI: text-embedding-004',
+        'ollama': '(离线) Ollama',
       }
     },
     'notes_parallel_jobs': {
@@ -494,40 +494,40 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Parallel jobs',
-      description: 'The number of parallel jobs to use for calculating text embeddings. Default: 10',
+      label: '笔记: 并行任务数',
+      description: '用于计算文本嵌入的并行任务数。默认: 10',
     },
     'notes_embed_title': {
       value: true,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Embed note title in chunk',
-      description: 'Default: true',
+      label: '笔记: 在块中嵌入笔记标题',
+      description: '默认: true',
     },
     'notes_embed_path': {
       value: true,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Embed leading headings in chunk',
-      description: 'Default: true',
+      label: '笔记: 在块中嵌入前置标题',
+      description: '默认: true',
     },
     'notes_embed_heading': {
       value: true,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Embed last heading in chunk',
-      description: 'Default: true',
+      label: '笔记: 在块中嵌入最后一个标题',
+      description: '默认: true',
     },
     'notes_embed_tags': {
       value: true,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Embed tags in chunk',
-      description: 'Default: true',
+      label: '笔记: 在块中嵌入标签',
+      description: '默认: true',
     },
     'notes_max_tokens': {
       value: 512,
@@ -537,8 +537,8 @@ export async function register_settings() {
       step: 128,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Max tokens',
-      description: 'The maximal context to include in a single note chunk. The preferred value will depend on the capabilities of the semantic similarity model. Default: 512',
+      label: '笔记: 最大标记数',
+      description: '单个笔记块中包含的最大上下文。首选值取决于语义相似性模型的能力。默认: 512',
     },
     'notes_context_tokens': {
       value: 2048,
@@ -548,8 +548,8 @@ export async function register_settings() {
       step: 128,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Context tokens',
-      description: 'The number of context tokens to extract from notes in "Chat with your notes". Default: 2048',
+      label: '笔记: 上下文标记数',
+      description: '"与你的笔记聊天"中从笔记中提取的上下文标记数。默认: 2048',
     },
     'notes_context_history': {
       value: 1,
@@ -559,8 +559,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Context history',
-      description: 'The number of user prompts to base notes context on for "Chat with your notes". Default: 1',
+      label: '笔记: 上下文历史记录',
+      description: '"与你的笔记聊天"中基于用户提示的笔记上下文数量。默认: 1',
     },
     'notes_openai_model_id': {
       value: '',
@@ -568,8 +568,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: OpenAI / Ollama (or compatible) custom model ID',
-      description: 'The OpenAI / Ollama model ID to use for calculating text embeddings. Default: empty',
+      label: '笔记: OpenAI / Ollama（或兼容）自定义模型 ID',
+      description: '用于计算文本嵌入的 OpenAI / Ollama 模型 ID。默认为空',
     },
     'notes_openai_endpoint': {
       value: '',
@@ -577,8 +577,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: OpenAI / Ollama (or compatible) API endpoint',
-      description: "The OpenAI / Ollama API endpoint to use for calculating text embeddings. Default: empty (OpenAI's default public endpoint)",
+      label: '笔记: OpenAI / Ollama（或兼容）API 端点',
+      description: "用于计算文本嵌入的 OpenAI / Ollama API 端点。默认为空（OpenAI 的默认公共端点）",
     },
     'notes_hf_model_id': {
       value: 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2',
@@ -586,8 +586,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Hugging Face feature extraction model ID',
-      description: 'The Hugging Face model ID to use for calculating text embeddings. Default: sentence-transformers/paraphrase-multilingual-mpnet-base-v2',
+      label: '笔记: Hugging Face 特征提取模型 ID',
+      description: '用于计算文本嵌入的 Hugging Face 模型 ID。默认: sentence-transformers/paraphrase-multilingual-mpnet-base-v2',
     },
     'notes_hf_endpoint': {
       value: '',
@@ -595,8 +595,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Hugging Face API endpoint',
-      description: "The Hugging Face API endpoint to use for calculating text embeddings. Default: empty (HF's default public endpoint)",
+      label: '笔记: Hugging Face API 端点',
+      description: "用于计算文本嵌入的 Hugging Face API 端点。默认为空（Hugging Face 的默认公共端点）",
     },
     'notes_db_update_delay': {
       value: 10,
@@ -606,16 +606,16 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Database update period (min)',
-      description: 'The period between database updates in minutes. Set to 0 to disable automatic updates. Default: 10',
+      label: '笔记: 数据库更新周期（分钟）',
+      description: '数据库更新之间的周期（分钟）。设置为 0 可禁用自动更新。默认: 10',
     },
     'notes_include_code': {
       value: false,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Include code blocks in DB',
-      description: 'Default: false',
+      label: '笔记: 将代码块包含在数据库中',
+      description: '默认: false',
     },
     'notes_include_links': {
       value: 0,
@@ -625,8 +625,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Weight of links in semantic search',
-      description: 'The weight given to all the links (combined) that appear in the query note when searching for its related notes. This also affects the selection of notes for "Chat with your notes". Set to 0 to ignore links appearing in the note, while a setting of 100 will ignore the note content. Default: 0',
+      label: '笔记: 语义搜索中链接的权重',
+      description: '查询笔记中出现的所有链接（合计）在搜索相关笔记时的权重。这也会影响 "与你的笔记聊天" 中选择的笔记。设置为 0 将忽略笔记中出现的链接，而设置为 100 将忽略笔记内容。默认: 0',
     },
     'notes_min_similarity': {
       value: 50,
@@ -636,8 +636,8 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Minimal note similarity',
-      description: 'Default: 50',
+      label: '笔记: 最小笔记相似度',
+      description: '默认: 50',
     },
     'notes_min_length': {
       value: 100,
@@ -646,8 +646,8 @@ export async function register_settings() {
       step: 10,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Minimal block length (chars) to be included',
-      description: 'Default: 100',
+      label: '笔记: 包含的最小块长度（字符）',
+      description: '默认: 100',
     },
     'notes_max_hits': {
       value: 10,
@@ -657,16 +657,16 @@ export async function register_settings() {
       step: 1,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Maximal number of notes to display',
-      description: 'Default: 10',
+      label: '笔记: 显示的最大笔记数',
+      description: '默认: 10',
     },
     'notes_search_box': {
       value: true,
       type: SettingItemType.Bool,
       section: 'jarvis.notes',
       public: true,
-      label: 'Notes: Show search box',
-      description: 'Default: true',
+      label: '笔记: 显示搜索框',
+      description: '默认: true',
     },
     'notes_prompt': {
       value: '',
@@ -674,8 +674,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Custom prompt',
-      description: 'The prompt (or additional instructions) to use for generating "Chat with your notes" responses. Default: empty',
+      label: '笔记: 自定义提示',
+      description: '用于生成 "与你的笔记聊天" 响应的提示（或附加说明）。默认为空',
     },
     'notes_attach_prev': {
       value: 0,
@@ -686,8 +686,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Number of leading blocks to add',
-      description: 'Preceding blocks that appear before the current block in the same note. Applies to "Chat with your notes". Default: 0',
+      label: '笔记: 添加的前置块数',
+      description: '同一笔记中当前块之前出现的前置块。适用于 "与你的笔记聊天"。默认: 0',
     },
     'notes_attach_next': {
       value: 0,
@@ -698,8 +698,8 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Number of trailing blocks to add',
-      description: 'Succeeding blocks that appear after the current block in the same note. Applies to "Chat with your notes". Default: 0',
+      label: '笔记: 添加的后置块数',
+      description: '同一笔记中当前块之后出现的后置块。适用于 "与你的笔记聊天"。默认: 0',
     },
     'notes_attach_nearest': {
       value: 0,
@@ -710,245 +710,245 @@ export async function register_settings() {
       section: 'jarvis.notes',
       public: true,
       advanced: true,
-      label: 'Notes: Number of nearest blocks to add',
-      description: 'Most similar blocks to the current block. Applies to "Chat with your notes". Default: 0',
+      label: '笔记: 添加的最近块数',
+      description: '与当前块最相似的块。适用于 "与你的笔记聊天"。默认: 0',
     },
-    'notes_agg_similarity': {
-      value: 'max',
-      type: SettingItemType.String,
-      isEnum: true,
-      section: 'jarvis.notes',
-      public: true,
-      label: 'Notes: Aggregation method for note similarity',
-      description: 'The method to use for ranking notes based on multiple embeddings. Default: max',
-      options: {
-        'max': 'max',
-        'avg': 'avg',
+      'notes_agg_similarity': {
+          value: 'max',
+          type: SettingItemType.String,
+          isEnum: true,
+          section: 'jarvis.notes',
+          public: true,
+          label: '笔记: 笔记相似度聚合方法',
+          description: '用于根据多个嵌入对笔记进行排名的方法。默认: max',
+          options: {
+              'max': '最大值',
+              'avg': '平均值',
+          }
+      },
+      'annotate_preferred_language': {
+          value: 'English',
+          type: SettingItemType.String,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释: 优先语言',
+          description: '生成标题和摘要时使用的优先语言。默认: 英语',
+      },
+      'annotate_title_flag': {
+          value: true,
+          type: SettingItemType.Bool,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释按钮: 建议标题',
+          description: '默认: true',
+      },
+      'annotate_title_prompt': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.annotate',
+          public: true,
+          advanced: true,
+          label: '注释: 自定义标题提示',
+          description: '用于生成标题的提示。默认: 空',
+      },
+      'annotate_summary_flag': {
+          value: true,
+          type: SettingItemType.Bool,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释按钮: 建议摘要',
+          description: '默认: true',
+      },
+      'annotate_summary_prompt': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.annotate',
+          public: true,
+          advanced: true,
+          label: '注释: 自定义摘要提示',
+          description: '用于生成摘要的提示。默认: 空',
+      },
+      'annotate_summary_title': {
+          value: '# 摘要',
+          type: SettingItemType.String,
+          section: 'jarvis.annotate',
+          public: true,
+          advanced: true,
+          label: '注释: 摘要部分标题',
+          description: '包含建议摘要的部分的标题。默认: # 摘要',
+      },
+      'annotate_links_flag': {
+          value: true,
+          type: SettingItemType.Bool,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释按钮: 建议链接',
+          description: '默认: true',
+      },
+      'annotate_links_title': {
+          value: '# 相关笔记',
+          type: SettingItemType.String,
+          section: 'jarvis.annotate',
+          public: true,
+          advanced: true,
+          label: '注释: 链接部分标题',
+          description: '包含建议链接的部分的标题。默认: # 相关笔记',
+      },
+      'annotate_tags_flag': {
+          value: true,
+          type: SettingItemType.Bool,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释按钮: 建议标签',
+          description: '默认: true',
+      },
+      'annotate_tags_method': {
+          value: 'from_list',
+          type: SettingItemType.String,
+          isEnum: true,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释: 标签方法',
+          description: '用于标记笔记的方法。默认: 根据现有标签建议',
+          options: {
+              'from_notes': '根据笔记建议',
+              'from_list': '根据现有标签建议',
+              'unsupervised': '建议新标签',
+          }
+      },
+      'annotate_tags_max': {
+          value: 5,
+          type: SettingItemType.Int,
+          minimum: 1,
+          maximum: 100,
+          step: 1,
+          section: 'jarvis.annotate',
+          public: true,
+          label: '注释: 最大建议标签数',
+          description: '默认: 5',
+      },
+      'scopus_api_key': {
+          value: 'YOUR_SCOPUS_API_KEY',
+          type: SettingItemType.String,
+          secure: true,
+          section: 'jarvis.research',
+          public: true,
+          label: '研究: Scopus API 密钥',
+          description: '您的 Elsevier/Scopus API 密钥（可选，用于研究）。请在 https://dev.elsevier.com/ 获取。',
+      },
+      'springer_api_key': {
+          value: 'YOUR_SPRINGER_API_KEY',
+          type: SettingItemType.String,
+          secure: true,
+          section: 'jarvis.research',
+          public: true,
+          label: '研究: Springer API 密钥',
+          description: '您的 Springer API 密钥（可选，用于研究）。请在 https://dev.springernature.com/ 获取。',
+      },
+      'paper_search_engine': {
+          value: 'Semantic Scholar',
+          type: SettingItemType.String,
+          isEnum: true,
+          section: 'jarvis.research',
+          public: true,
+          label: '研究: 论文搜索引擎',
+          description: '用于研究提示的搜索引擎。默认: Semantic Scholar',
+          options: search_engines,
+      },
+      'use_wikipedia': {
+          value: true,
+          type: SettingItemType.Bool,
+          section: 'jarvis.research',
+          public: true,
+          label: '研究: 在研究提示中包含维基百科搜索',
+          description: '默认: true',
+      },
+      'include_paper_summary': {
+          value: false,
+          type: SettingItemType.Bool,
+          section: 'jarvis.research',
+          public: true,
+          label: '研究: 在研究提示响应中包含论文摘要',
+          description: '默认: false',
+      },
+      'chat_prefix': {
+          value: '\\n\\n---\\n**Jarvis:** ',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          label: '聊天: Jarvis 前缀',
+          description: '默认: "\\n\\n---\\n**Jarvis:** "',
+      },
+      'chat_suffix': {
+          value: '\\n\\n---\n**User:** ',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          label: '聊天: 用户前缀',
+          description: '默认: "\\n\\n---\\n**User:** "',
+      },
+      'instruction': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          advanced: true,
+          label: '提示: 指令下拉选项',
+          description: '显示在下拉菜单中的常用指令提示（{label:prompt, ...} JSON）。',
+      },
+      'scope': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          advanced: true,
+          label: '提示: 范围下拉选项',
+          description: '显示在下拉菜单中的常用范围提示（{label:prompt, ...} JSON）。',
+      },
+      'role': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          advanced: true,
+          label: '提示: 角色下拉选项',
+          description: '显示在下拉菜单中的常用角色提示（{label:prompt, ...} JSON）。',
+      },
+      'reasoning': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.chat',
+          public: true,
+          advanced: true,
+          label: '提示: 推理下拉选项',
+          description: '显示在下拉菜单中的常用推理提示（{label:prompt, ...} JSON）。',
+      },
+      'notes_exclude_folders': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.notes',
+          public: true,
+          advanced: true,
+          label: '笔记: 从笔记数据库中排除的文件夹',
+          description: '以逗号分隔的文件夹 ID 列表。',
+      },
+      'notes_panel_title': {
+          value: '相关笔记',
+          type: SettingItemType.String,
+          section: 'jarvis.notes',
+          public: true,
+          advanced: true,
+          label: '笔记: 笔记面板标题',
+      },
+      'notes_panel_user_style': {
+          value: '',
+          type: SettingItemType.String,
+          section: 'jarvis.notes',
+          public: true,
+          advanced: true,
+          label: '笔记: 笔记面板用户 CSS',
+          description: '应用于笔记面板的自定义 CSS。',
       }
-    },
-    'annotate_preferred_language': {
-      value: 'English',
-      type: SettingItemType.String,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate: Preferred language',
-      description: 'The preferred language to use for generating titles and summaries. Default: English',
-    },
-    'annotate_title_flag': {
-      value: true,
-      type: SettingItemType.Bool,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate button: suggest title',
-      description: 'Default: true',
-    },
-    'annotate_title_prompt': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.annotate',
-      public: true,
-      advanced: true,
-      label: 'Annotate: Custom title prompt',
-      description: 'The prompt to use for generating the title. Default: empty',
-    },
-    'annotate_summary_flag': {
-      value: true,
-      type: SettingItemType.Bool,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate button: suggest summary',
-      description: 'Default: true',
-    },
-    'annotate_summary_prompt': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.annotate',
-      public: true,
-      advanced: true,
-      label: 'Annotate: Custom summary prompt',
-      description: 'The prompt to use for generating the summary. Default: empty',
-    },
-    'annotate_summary_title': {
-      value: '# Summary',
-      type: SettingItemType.String,
-      section: 'jarvis.annotate',
-      public: true,
-      advanced: true,
-      label: 'Annotate: Summary section title',
-      description: 'The title of the section containing the suggested summary. Default: # Summary',
-    },
-    'annotate_links_flag': {
-      value: true,
-      type: SettingItemType.Bool,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate button: suggest links',
-      description: 'Default: true',
-    },
-    'annotate_links_title': {
-      value: '# Related notes',
-      type: SettingItemType.String,
-      section: 'jarvis.annotate',
-      public: true,
-      advanced: true,
-      label: 'Annotate: Links section title',
-      description: 'The title of the section containing the suggested links. Default: # Related notes',
-    },
-    'annotate_tags_flag': {
-      value: true,
-      type: SettingItemType.Bool,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate button: suggest tags',
-      description: 'Default: true',
-    },
-    'annotate_tags_method': {
-      value: 'from_list',
-      type: SettingItemType.String,
-      isEnum: true,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate: Tags method',
-      description: 'The method to use for tagging notes. Default: Suggest based on existing tags',
-      options: {
-        'from_notes': 'Suggest based on notes',
-        'from_list': 'Suggest based on existing tags',
-        'unsupervised': 'Suggest new tags',
-      }
-    },
-    'annotate_tags_max': {
-      value: 5,
-      type: SettingItemType.Int,
-      minimum: 1,
-      maximum: 100,
-      step: 1,
-      section: 'jarvis.annotate',
-      public: true,
-      label: 'Annotate: Maximal number of tags to suggest',
-      description: 'Default: 5',
-    },
-    'scopus_api_key': {
-      value: 'YOUR_SCOPUS_API_KEY',
-      type: SettingItemType.String,
-      secure: true,
-      section: 'jarvis.research',
-      public: true,
-      label: 'Research: Scopus API Key',
-      description: 'Your Elsevier/Scopus API Key (optional for research). Get one at https://dev.elsevier.com/.',
-    },
-    'springer_api_key': {
-      value: 'YOUR_SPRINGER_API_KEY',
-      type: SettingItemType.String,
-      secure: true,
-      section: 'jarvis.research',
-      public: true,
-      label: 'Research: Springer API Key',
-      description: 'Your Springer API Key (optional for research). Get one at https://dev.springernature.com/.',
-    },
-    'paper_search_engine': {
-      value: 'Semantic Scholar',
-      type: SettingItemType.String,
-      isEnum: true,
-      section: 'jarvis.research',
-      public: true,
-      label: 'Research: Paper search engine',
-      description: 'The search engine to use for research prompts. Default: Semantic Scholar',
-      options: search_engines,
-    },
-    'use_wikipedia': {
-      value: true,
-      type: SettingItemType.Bool,
-      section: 'jarvis.research',
-      public: true,
-      label: 'Research: Include Wikipedia search in research prompts', 
-      description: 'Default: true',
-    },
-    'include_paper_summary': {
-      value: false,
-      type: SettingItemType.Bool,
-      section: 'jarvis.research',
-      public: true,
-      label: 'Research: Include paper summary in response to research prompts',
-      description: 'Default: false',
-    },
-    'chat_prefix': {
-      value: '\\n\\n---\\n**Jarvis:** ',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      label: 'Chat: Jarvis prefix',
-      description: 'Default: "\\n\\n---\\n**Jarvis:** "',
-    },
-    'chat_suffix': {
-      value: '\\n\\n---\n**User:** ',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      label: 'Chat: User prefix',
-      description: 'Default: "\\n\\n---\\n**User:** "',
-    },
-    'instruction': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      advanced: true,
-      label: 'Prompts: Instruction dropdown options',
-      description: 'Favorite instruction prompts to show in dropdown ({label:prompt, ...} JSON).',
-    },
-    'scope': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      advanced: true,
-      label: 'Prompts: Scope dropdown options',
-      description: 'Favorite scope prompts to show in dropdown ({label:prompt, ...} JSON).',
-    },
-    'role': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      advanced: true,
-      label: 'Prompts: Role dropdown options',
-      description: 'Favorite role prompts to show in dropdown ({label:prompt, ...} JSON).',
-    },
-    'reasoning': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.chat',
-      public: true,
-      advanced: true,
-      label: 'Prompts: Reasoning dropdown options',
-      description: 'Favorite reasoning prompts to show in dropdown ({label:prompt, ...} JSON).',
-    },
-    'notes_exclude_folders': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.notes',
-      public: true,
-      advanced: true,
-      label: 'Notes: Folders to exclude from note DB',
-      description: 'Comma-separated list of folder IDs.',
-    },
-    'notes_panel_title': {
-      value: 'RELATED NOTES',
-      type: SettingItemType.String,
-      section: 'jarvis.notes',
-      public: true,
-      advanced: true,
-      label: 'Notes: Title for notes panel',
-    },
-    'notes_panel_user_style': {
-      value: '',
-      type: SettingItemType.String,
-      section: 'jarvis.notes',
-      public: true,
-      advanced: true,
-      label: 'Notes: User CSS for notes panel',
-      description: 'Custom CSS to apply to the notes panel.',
-    }
   });
 
   // set default values
@@ -963,17 +963,19 @@ export async function register_settings() {
 }
 
 export async function set_folders(exclude: boolean, folder_id: string, settings: JarvisSettings) {
-  settings.notes_exclude_folders.delete('');  // left when settings field is empty
-  const T = await get_folder_tree();  // folderId: childrenIds
+  // 删除空字符串（当设置字段为空时会留下空字符串）
+  settings.notes_exclude_folders.delete('');
+  // 获取文件夹树结构 (folderId: 子文件夹Ids)
+  const T = await get_folder_tree();
   let q = ['root'];
   let folder: string;
   let found = false;
 
-  // breadth-first search
+  // 广度优先搜索
   while (q.length) {
     folder = q.shift();
-    if (folder_id == folder){
-      // restart queue and start accumulating
+    if (folder_id == folder) {
+      // 重启队列并开始累积
       found = true;
       q = [];
     }
@@ -981,7 +983,7 @@ export async function set_folders(exclude: boolean, folder_id: string, settings:
       q.push(...T.get(folder));
 
     if (!found)
-      continue
+      continue;
 
     if (exclude) {
       settings.notes_exclude_folders.add(folder);
@@ -990,12 +992,14 @@ export async function set_folders(exclude: boolean, folder_id: string, settings:
     }
   }
 
+  // 更新设置中的排除文件夹列表
   await joplin.settings.setValue('notes_exclude_folders',
-    Array(...settings.notes_exclude_folders).toString());
+    Array.from(settings.notes_exclude_folders).toString());
 }
 
 async function get_folder_tree(): Promise<Map<string, string[]>> {
-  let T = new Map() as Map<string, string[]>;  // folderId: childrenIds
+  // 创建一个 Map 来存储文件夹树结构 (folderId: 子文件夹Ids)
+  let T = new Map() as Map<string, string[]>;
   let pageNum = 1;
   let hasMore = true;
 
@@ -1006,7 +1010,7 @@ async function get_folder_tree(): Promise<Map<string, string[]>> {
 
     for (const folder of items) {
       if (!folder.id)
-        continue
+        continue;
       if (!folder.parent_id)
         folder.parent_id = 'root';
 
@@ -1019,3 +1023,4 @@ async function get_folder_tree(): Promise<Map<string, string[]>> {
   }
   return T;
 }
+

@@ -3,34 +3,34 @@ import { BlockEmbedding } from './embeddings';
 const sqlite3 = joplin.require('sqlite3');
 const fs = joplin.require('fs-extra');
 
-// connect to the database
+// 连接到数据库
 export async function connect_to_db(model: any): Promise<any> {
-  await migrate_db();  // migrate the database if necessary
+  await migrate_db();  // 如果需要，迁移数据库
   const plugin_dir = await joplin.plugins.dataDir();
   const db_fname = model.id.replace(/[/\\?%*:|"<>]/g, '_');
   const db = await new sqlite3.Database(plugin_dir + `/${db_fname}.sqlite`);
 
-  // check the model version
+  // 检查模型版本
   let [check, model_idx] = await db_update_check(db, model);
   let choice = -1;
   if (check === 'new') {
-    choice = await joplin.views.dialogs.showMessageBox('The note database is based on a different model. Would you like to rebuild it? (Highly recommended)');
+    choice = await joplin.views.dialogs.showMessageBox('笔记数据库基于不同的模型。您是否希望重建它？（强烈推荐）');
   } else if (check === 'embedding_update') {
-    choice = await joplin.views.dialogs.showMessageBox('The note database is based on an older version of the embeddings. Would you like to rebuild it? (Recommended)');
+    choice = await joplin.views.dialogs.showMessageBox('笔记数据库基于较旧版本的嵌入。您是否希望重建它？（推荐）');
   } else if (check === 'model_update') {
-    choice = await joplin.views.dialogs.showMessageBox('The note database is based on an older version of the model. Would you like to rebuild it? (Recommended)');
+    choice = await joplin.views.dialogs.showMessageBox('笔记数据库基于较旧版本的模型。您是否希望重建它？（推荐）');
   } else if (check === 'size_change') {
-    choice = await joplin.views.dialogs.showMessageBox('The note database is based on a different max tokens value. Would you like to rebuild it? (Optional)');
+    choice = await joplin.views.dialogs.showMessageBox('笔记数据库基于不同的最大令牌值。您是否希望重建它？（可选）');
   }
 
   if (choice === 0) {
-    // OK (rebuild)
+    // 确定（重建）
     db.close();
     await fs.remove(plugin_dir + `/${db_fname}.sqlite`);
     return await connect_to_db(model);
 
   } else if (choice === 1) {
-    // Cancel (keep existing)
+    // 取消（保留现有）
     model_idx = await insert_model(db, model);
   }
   model.db_idx = model_idx;
@@ -38,12 +38,12 @@ export async function connect_to_db(model: any): Promise<any> {
   return db;
 }
 
-// create the database tables
+// 创建数据库表
 export async function init_db(db: any, model: any): Promise<void> {
   if (await db_tables_exist(db)) {
     return;
   }
-  // create the table for embeddings
+  // 创建嵌入表
   db.exec(`CREATE TABLE embeddings (
     idx INTEGER PRIMARY KEY,
     line INTEGER NOT NULL,
@@ -56,7 +56,7 @@ export async function init_db(db: any, model: any): Promise<void> {
     model_idx INTEGER NOT NULL REFERENCES models(idx)
   )`);
 
-  // create the table for note hashes
+  // 创建笔记哈希表
   db.exec(`CREATE TABLE notes (
     idx INTEGER PRIMARY KEY,
     note_id TEXT NOT NULL UNIQUE,
@@ -64,7 +64,7 @@ export async function init_db(db: any, model: any): Promise<void> {
     UNIQUE (note_id, hash)
   )`);
 
-  // create the table for model metadata
+  // 创建模型元数据表
   db.exec(`CREATE TABLE models (
     idx INTEGER PRIMARY KEY,
     model_name TEXT NOT NULL,
@@ -74,11 +74,11 @@ export async function init_db(db: any, model: any): Promise<void> {
     UNIQUE (model_name, model_version, max_block_size, embedding_version)
   )`);
 
-  // add the model metadata
+  // 添加模型元数据
   insert_model(db, model);
 }
 
-// check if the embeddings and notes tables exist
+// 检查嵌入和笔记表是否存在
 async function db_tables_exist(db: any): Promise<boolean> {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -86,7 +86,7 @@ async function db_tables_exist(db: any): Promise<boolean> {
         if (err) {
           reject(err);
         } else {
-          // check if embeddings and notes exist
+          // 检查嵌入和笔记是否存在
           let embeddings_exist = false;
           let notes_exist = false;
           for (let row of rows) {
@@ -104,7 +104,7 @@ async function db_tables_exist(db: any): Promise<boolean> {
   });
 }
 
-// compare the model metadata in the database to the model metadata in the plugin
+// 比较数据库中的模型元数据与插件中的模型元数据
 async function db_update_check(db: any, model: any): Promise<[String, number]> {
   if (!(await db_tables_exist(db))) {
     return ['OK', 0];
@@ -122,8 +122,8 @@ async function db_update_check(db: any, model: any): Promise<[String, number]> {
         if (err) {
           reject(err);
         } else {
-          // check if the model metadata exists in the table
-          // if any of the rows matches the model metadata, then return OK
+          // 检查模型元数据是否存在于表中
+          // 如果任何行匹配模型元数据，则返回 OK
           let model_exists = false;
           let model_update = true;
           let embedding_update = true;
@@ -170,9 +170,9 @@ async function db_update_check(db: any, model: any): Promise<[String, number]> {
   });
 }
 
-// get all the embeddings of all notes from the DB.
-// first, join the notes table and the embeddings table.
-// then, return all embeddings in a BlockEmbedding array.
+// 从数据库中获取所有笔记的所有嵌入。
+// 首先，将笔记表和嵌入表连接起来。
+// 然后，返回一个 BlockEmbedding 数组。
 export async function get_all_embeddings(db: any): Promise<BlockEmbedding[]> {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -182,7 +182,7 @@ export async function get_all_embeddings(db: any): Promise<BlockEmbedding[]> {
           reject(err);
         } else {
           resolve(rows.map((row) => {
-            // convert the embedding from a blob to a Float32Array
+            // 将嵌入从 blob 转换为 Float32Array
             const buffer = Buffer.from(row.embedding);
             const embedding = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Float32Array.BYTES_PER_ELEMENT);
             return {
@@ -207,7 +207,7 @@ function insert_model(db: any, model: any): Promise<number> {
   return new Promise((resolve, reject) => {
     db.run(`INSERT INTO models (model_name, model_version, max_block_size) VALUES ('${model.id}', '${model.version}', ${model.max_block_size})`, function(error) {
       if (error) {
-        console.error('connect_to_db error:', error);
+        console.error('connect_to_db 错误:', error);
         reject(error);
       } else {
         resolve(this.lastID);
@@ -216,8 +216,8 @@ function insert_model(db: any, model: any): Promise<number> {
   });
 }
 
-// insert a new note into the database, if it already exists update its hash.
-// return the id of the note in the database.
+// 将新笔记插入数据库，如果已存在则更新其哈希。
+// 返回数据库中笔记的 ID。
 export async function insert_note(db: any, note_id: string, hash: string): Promise<number> {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -232,18 +232,18 @@ export async function insert_note(db: any, note_id: string, hash: string): Promi
   });
 }
 
-// insert new embeddings for a single note into the database. check if the note hash changed.
-// if the hash changed, delete all the embeddings for that note and insert the new ones.
-// if the note has no embeddings, insert the new ones.
+// 将单个笔记的新嵌入插入数据库。检查笔记哈希是否更改。
+// 如果哈希更改，则删除该笔记的所有嵌入并插入新的嵌入。
+// 如果笔记没有嵌入，则插入新的嵌入。
 export async function insert_note_embeddings(db: any, embeds: BlockEmbedding[], model: any): Promise<void> {
   const embeddings = embeds;
-  // check that embeddings contain a single note_id
+  // 检查嵌入是否包含单个 note_id
   if (embeddings.length === 0) {
     return;
   }
   for (let embd of embeddings) {
     if ((embd.id !== embeddings[0].id) || (embd.hash !== embeddings[0].hash)) {
-      throw new Error('insert_note_embeddings: embeddings contain multiple notes');
+      throw new Error('insert_note_embeddings: 嵌入包含多个笔记');
     }
   }
 
@@ -251,16 +251,16 @@ export async function insert_note_embeddings(db: any, embeds: BlockEmbedding[], 
     db.serialize(async () => {
       const note_status = await get_note_status(db, embeddings[0].id, embeddings[0].hash);
       if (note_status.isUpToDate) {
-        // no need to update the embeddings
+        // 无需更新嵌入
         resolve();
       }
-      const new_row_id = await insert_note(db, embeddings[0].id, embeddings[0].hash);  // insert or update
-      // delete the old embeddings
+      const new_row_id = await insert_note(db, embeddings[0].id, embeddings[0].hash);  // 插入或更新
+      // 删除旧的嵌入
       db.run(`DELETE FROM embeddings WHERE note_idx = ?`, [note_status.rowID], (err) => {
         if (err) {
           reject(err);
         } else {
-          // insert the new embeddings
+          // 插入新的嵌入
           const stmt = db.prepare(`INSERT INTO embeddings (note_idx, line, body_idx, length, level, title, embedding, model_idx) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
           for (let embd of embeddings) {
             stmt.run([new_row_id, embd.line, embd.body_idx, embd.length, embd.level, embd.title, Buffer.from(embd.embedding.buffer), model.db_idx]);
@@ -272,11 +272,10 @@ export async function insert_note_embeddings(db: any, embeds: BlockEmbedding[], 
     });
   });
 }
-
-// check if a note exists in the database.
-// if it does, compare its hash with the hash of the note in the database.
-// if the hashes are the same return true, otherwise return false.
-// if it does not exist in the database, return false.
+// 检查数据库中是否存在笔记。
+// 如果存在，比较其哈希值与数据库中笔记的哈希值。
+// 如果哈希值相同则返回 true，否则返回 false。
+// 如果不存在于数据库中，则返回 false。
 export async function get_note_status(db: any, note_id: string, hash: string): Promise<{isUpToDate: boolean, rowID: number | null}> {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
@@ -293,7 +292,7 @@ export async function get_note_status(db: any, note_id: string, hash: string): P
   });
 }
 
-// delete a note and its embeddings from the database.
+// 从数据库中删除笔记及其嵌入。
 export async function delete_note_and_embeddings(db: any, note_id: string): Promise<void> {
   const note_status = await get_note_status(db, note_id, '');
   return new Promise((resolve, reject) => {
@@ -317,7 +316,7 @@ export async function delete_note_and_embeddings(db: any, note_id: string): Prom
 
 export async function clear_deleted_notes(embeddings: BlockEmbedding[], db: any):
     Promise<BlockEmbedding[]> {
-  // get all existing note ids
+  // 获取所有现有笔记 ID
   let page = 0;
   let notes: any;
   let note_ids = [];
@@ -346,11 +345,11 @@ export async function clear_deleted_notes(embeddings: BlockEmbedding[], db: any)
     }
   }
 
-  console.log(`clear_deleted_notes: ${deleted.length} notes removed from DB`);
+  console.log(`clear_deleted_notes: 从数据库中移除了 ${deleted.length} 篇笔记`);
   return new_embeddings;
 }
 
-// migrate the database to the latest version.
+// 将数据库迁移到最新版本。
 async function migrate_db(): Promise<void> {
   const plugin_dir = await joplin.plugins.dataDir();
   const db_path_old = plugin_dir + '/embeddings.sqlite';
@@ -358,12 +357,12 @@ async function migrate_db(): Promise<void> {
 
   const db_path_new = plugin_dir + '/Universal Sentence Encoder.sqlite';
 
-  console.log(`migrate_db: found old database at ${db_path_old}`);
+  console.log(`migrate_db: 在 ${db_path_old} 找到旧数据库`);
   fs.renameSync(db_path_old, db_path_new);
 
   const db = await new sqlite3.Database(db_path_new);
-  // alter the models table
+  // 修改 models 表
   await db.run(`ALTER TABLE models ADD COLUMN max_block_size INT NOT NULL DEFAULT 512`);
   await db.close();
-  await new Promise(res => setTimeout(res, 1000));  // make sure that the database is closed
+  await new Promise(res => setTimeout(res, 1000));  // 确保数据库已关闭
 }

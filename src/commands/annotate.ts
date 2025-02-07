@@ -4,11 +4,10 @@ import { find_nearest_notes } from '../notes/embeddings';
 import { JarvisSettings } from '../ux/settings';
 import { get_all_tags, split_by_tokens } from '../utils';
 
-
 export async function annotate_title(model_gen: TextGenerationModel,
   settings: JarvisSettings, text: string = '') {
-  // generate a title for the current note
-  // if text is empty, use the note body
+  // 为当前笔记生成标题
+  // 如果 text 为空，则使用笔记正文
   if (model_gen.model === null) { return; }
   const note = await joplin.workspace.selectedNote();
   if (!note) {
@@ -19,11 +18,11 @@ export async function annotate_title(model_gen: TextGenerationModel,
     const text_tokens = model_gen.max_tokens - model_gen.count_tokens(settings.prompts.title) - 30;
     text = split_by_tokens([note.body], model_gen, text_tokens, 'first')[0].join(' ');
   }
-  // get the first number or date in the current title
+  // 获取当前标题中的第一个数字或日期
   let title = note.title.match(/^[\d-/.]+/);
   if (title) { title = title[0] + ' '; } else { title = ''; }
 
-  const prompt = `Note content\n===\n${text}\n===\n\nInstruction\n===\n${settings.prompts.title.replace('{preferred_language}', settings.annotate_preferred_language)}\n===\n\nNote title\n===\n`;
+  const prompt = `笔记内容\n===\n${text}\n===\n\n指令\n===\n${settings.prompts.title.replace('{preferred_language}', settings.annotate_preferred_language)}\n===\n\n笔记标题\n===\n`;
   title += await model_gen.complete(prompt);
   if (title.slice(-1) === '.') { title = title.slice(0, -1); }
 
@@ -32,9 +31,9 @@ export async function annotate_title(model_gen: TextGenerationModel,
 
 export async function annotate_summary(model_gen: TextGenerationModel,
   settings: JarvisSettings, edit_note: boolean = true): Promise<string> {
-  // generate a summary
-  // insert summary into note (replace existing one)
-  // if edit_note is false, then just return the summary
+  // 生成摘要
+  // 将摘要插入笔记（替换现有摘要）
+  // 如果 edit_note 为 false，则仅返回摘要
   if (model_gen.model === null) { return; }
   const note = await joplin.workspace.selectedNote();
   if (!note) {
@@ -48,13 +47,13 @@ export async function annotate_summary(model_gen: TextGenerationModel,
   const text_tokens = model_gen.max_tokens - model_gen.count_tokens(settings.prompts.summary) - 80;
   const text = split_by_tokens([note.body.replace(find_summary, '')], model_gen, text_tokens, 'first')[0].join(' ');
 
-  const prompt = `Note content\n===\n${text}\n===\n\nInstruction\n===\n${settings.prompts.summary.replace('{preferred_language}', settings.annotate_preferred_language)}\n===\n\nNote summary\n===\n`;
+  const prompt = `笔记内容\n===\n${text}\n===\n\n指令\n===\n${settings.prompts.summary.replace('{preferred_language}', settings.annotate_preferred_language)}\n===\n\n笔记摘要\n===\n`;
 
   const summary = await model_gen.complete(prompt);
 
   if (!edit_note) { return summary; }
 
-  // replace existing summary block, or add if not present
+  // 替换现有摘要块，或添加摘要块
   if (note.body.includes(summary_start) &&
     note.body.includes(summary_end)) {
     note.body = note.body.replace(find_summary, `${summary_start}\n${settings.annotate_summary_title}\n${summary}\n${summary_end}`);
@@ -74,13 +73,13 @@ export async function annotate_links(model_embed: TextEmbeddingModel, settings: 
     return;
   }
 
-  // semantic search
+  // 语义搜索
   const nearest = await find_nearest_notes(model_embed.embeddings, note.id, note.title, note.body, model_embed, settings);
 
-  // generate links
+  // 生成链接
   const links = nearest.map(n => `[${n.title}](:/${n.id})`).join('\n');
 
-  // replace existing links block, or add if not present
+  // 替换现有链接块，或添加链接块
   const links_start = '<!-- jarvis-links-start -->';
   const links_end = '<!-- jarvis-links-end -->';
   const find_links = new RegExp(`${links_start}[\\s\\S]*?${links_end}`);
@@ -106,50 +105,50 @@ export async function annotate_tags(model_gen: TextGenerationModel, model_embed:
   let prompt = '';
   let tag_list: string[] = [];
   if (settings.annotate_tags_method === 'unsupervised') {
-    prompt = `${settings.prompts.tags} Return *at most* ${settings.annotate_tags_max} keywords.`;
+    prompt = `${settings.prompts.tags} 返回 *最多* ${settings.annotate_tags_max} 个关键字。`;
 
   } else if (settings.annotate_tags_method === 'from_list') {
     tag_list = await get_all_tags();
     if (tag_list.length == 0) {
-      joplin.views.dialogs.showMessageBox('Error: no tags found');
+      joplin.views.dialogs.showMessageBox('错误：未找到标签');
       return;
     }
-    prompt = `${settings.prompts.tags} Return *at most* ${settings.annotate_tags_max} keywords in total from the keyword bank below.\n\nKeyword bank\n===\n${tag_list.join(', ')}\n===`;
+    prompt = `${settings.prompts.tags} 返回 *最多* ${settings.annotate_tags_max} 个关键字，从以下关键字库中选择。\n\n关键字库\n===\n${tag_list.join(', ')}\n===`;
 
   } else if (settings.annotate_tags_method === 'from_notes') {
     if (model_embed.model === null) { return; }
     if (model_embed.embeddings.length == 0) {
-      joplin.views.dialogs.showMessageBox('Error: notes DB is empty');
+      joplin.views.dialogs.showMessageBox('错误：笔记数据库为空');
       return;
     }
 
-    // semantic search
+    // 语义搜索
     const nearest = await find_nearest_notes(model_embed.embeddings, note.id, note.title, note.body, model_embed, settings);
-    // generate examples
+    // 生成示例
     let notes: string[] = [];
     for (const n of nearest) {
       const tags = (await joplin.data.get(['notes', n.id, 'tags'], { fields: ['title'] }))
         .items.map(t => t.title);
       if (tags.length > 0) {
         tag_list = tag_list.concat(tags);
-        notes = notes.concat(`The note "${n.title}" has the keywords: ${tags.join(', ')}.`);
+        notes = notes.concat(`笔记 "${n.title}" 包含以下关键字：${tags.join(', ')}.`);
       }
     }
     if (tag_list.length == 0) { return; }
 
-    prompt = `${settings.prompts.tags} Return *at most* ${settings.annotate_tags_max} keywords in total from the examples below.\n===\n\nKeyword examples\n===\n${notes.join('\n')}\n===`;
+    prompt = `${settings.prompts.tags} 返回 *最多* ${settings.annotate_tags_max} 个关键字，从以下示例中选择。\n===\n\n关键字示例\n===\n${notes.join('\n')}\n===`;
   }
 
-  // summarize the note
+  // 摘要笔记
   if (summary.length === 0) {
     summary = await annotate_summary(model_gen, settings, false);
   }
 
   let tags = (await model_gen.complete(
-    `Note content\n===\n${summary}\n===\n\nInstruction\n===\n${prompt}\n===\n\nSuggested keywords\n===\n`))
+    `笔记内容\n===\n${summary}\n===\n\n指令\n===\n${prompt}\n===\n\n建议的关键字\n===\n`))
     .split(', ').map(tag => tag.trim().toLowerCase());
 
-  // post-processing
+  // 后处理
   if (tag_list.length > 0) {
     tags = tags.filter(tag => tag_list.includes(tag));
   }

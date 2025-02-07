@@ -19,14 +19,14 @@ joplin.plugins.register({
 
     const dialogAsk = await joplin.views.dialogs.create('jarvis.ask.dialog');
 
-    const delay_startup = 5;  // seconds
+    const delay_startup = 5;  // 秒
     const delay_panel = 1;
     const delay_scroll = 1;
     let delay_db_update = 60 * settings.notes_db_update_delay;
 
     await new Promise(res => setTimeout(res, delay_startup * 1000));
     let model_embed = await load_embedding_model(settings);
-    if (await skip_db_init_dialog(model_embed)) { delay_db_update = 0; }  // cancel auto update
+    if (await skip_db_init_dialog(model_embed)) { delay_db_update = 0; }  // 取消自动更新
 
     const panel = await joplin.views.panels.create('jarvis.relatedNotes');
     register_panel(panel, settings, model_embed);
@@ -50,7 +50,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.ask',
-      label: 'Ask Jarvis',
+      label: '询问 Jarvis',
       execute: async () => {
         ask_jarvis(model_gen, dialogAsk);
       }
@@ -58,7 +58,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.chat',
-      label: 'Chat with Jarvis',
+      label: '与 Jarvis 聊天',
       iconName: 'fas fa-robot',
       execute: async () => {
         chat_with_jarvis(model_gen);
@@ -67,7 +67,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.research',
-      label: 'Research with Jarvis',
+      label: '与 Jarvis 进行研究',
       execute: async () => {
         research_with_jarvis(model_gen, dialogAsk);
       }
@@ -75,7 +75,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.edit',
-      label: 'Edit selection with Jarvis',
+      label: '用 Jarvis 编辑选中的内容',
       iconName: 'far fa-edit',
       execute: async () => {
         edit_with_jarvis(model_gen, dialogAsk);
@@ -84,7 +84,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.complete',
-      label: 'Auto-complete with Jarvis',
+      label: '用 Jarvis 自动补全',
       execute: async () => {
         auto_complete(model_gen);
       }
@@ -92,7 +92,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.annotate.title',
-      label: 'Annotate note: title',
+      label: '注释笔记：标题',
       execute: async () => {
         await annotate_title(model_gen, settings);
       }
@@ -100,7 +100,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.annotate.summary',
-      label: 'Annotate note: summary',
+      label: '注释笔记：摘要',
       execute: async () => {
         await annotate_summary(model_gen, settings);
       }
@@ -108,7 +108,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.annotate.tags',
-      label: 'Annotate note: tags',
+      label: '注释笔记：标签',
       execute: async () => {
         await annotate_tags(model_gen, model_embed, settings);
       }
@@ -116,7 +116,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.annotate.links',
-      label: 'Annotate note: links',
+      label: '注释笔记：链接',
       execute: async () => {
         await annotate_links(model_embed, settings);
       }
@@ -124,13 +124,13 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.annotate.button',
-      label: 'Annotate note with Jarvis',
+      label: '用 Jarvis 注释笔记',
       iconName: 'fas fa-lightbulb',
       execute: async () => {
         if (settings.annotate_links_flag) { await annotate_links(model_embed, settings); }
 
         if (settings.annotate_summary_flag || settings.annotate_title_flag || settings.annotate_tags_flag) {
-          // use a single big prompt to generate a summary, and then reuse it for title and tags
+          // 使用单个大提示生成摘要，然后重用它来生成标题和标签
           const summary = await annotate_summary(model_gen, settings, settings.annotate_summary_flag);
           if (settings.annotate_title_flag) { await annotate_title(model_gen, settings, summary); }
           if (settings.annotate_tags_flag) { await annotate_tags(model_gen, model_embed, settings, summary); }
@@ -140,7 +140,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.notes.db.update',
-      label: 'Update Jarvis note DB',
+      label: '更新 Jarvis 笔记数据库',
       execute: async () => {
         if (model_embed.model === null) {
           await model_embed.initialize();
@@ -151,7 +151,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.notes.find',
-      label: 'Find related notes',
+      label: '查找相关笔记',
       iconName: 'fas fa-search',
       execute: async () => {
         if (model_embed.model === null) {
@@ -163,7 +163,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.notes.toggle_panel',
-      label: 'Toggle related notes panel',
+      label: '切换相关笔记面板',
       execute: async () => {
         if (await joplin.views.panels.visible(panel)) {
           await joplin.views.panels.hide(panel);
@@ -179,7 +179,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.notes.chat',
-      label: 'Chat with your notes',
+      label: '与你的笔记聊天',
       iconName: 'fas fa-comments',
       execute: async () => {
         if (model_embed.model === null) {
@@ -191,7 +191,7 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.notes.preview',
-      label: 'Preview chat notes context',
+      label: '预览聊天笔记上下文',
       execute: async () => {
         if (model_embed.model === null) {
           await model_embed.initialize();
@@ -202,17 +202,17 @@ joplin.plugins.register({
 
     joplin.commands.register({
       name: 'jarvis.utils.count_tokens',
-      label: 'Count tokens in selection',
+      label: '统计选中内容的标记数',
       execute: async () => {
         const text = await joplin.commands.execute('selectedText');
         const token_count = model_gen.count_tokens(text);
-        await joplin.views.dialogs.showMessageBox(`Token count: ${token_count}`);
+        await joplin.views.dialogs.showMessageBox(`标记数: ${token_count}`);
       },
     });
 
     await joplin.commands.register({
       name: 'jarvis.notes.exclude_folder',
-      label: 'Exclude notebook from note DB',
+      label: '从笔记数据库中排除笔记本',
       execute: async () => {
         const folder = await joplin.workspace.selectedFolder();
         if (folder == undefined) return;
@@ -223,7 +223,7 @@ joplin.plugins.register({
 
     await joplin.commands.register({
       name: 'jarvis.notes.include_folder',
-      label: 'Include notebook in note DB',
+      label: '将笔记本包含在笔记数据库中',
       execute: async () => {
         const folder = await joplin.workspace.selectedFolder();
         if (folder == undefined) return;
@@ -275,7 +275,7 @@ joplin.plugins.register({
     await joplin.views.panels.onMessage(panel, async (message) => {
       if (message.name === 'openRelatedNote') {
         await joplin.commands.execute('openNote', message.note);
-        // Navigate to the line
+        // 跳转到行
         if (message.line > 0) {
           await new Promise(res => setTimeout(res, delay_scroll * 1000));
           await joplin.commands.execute('editor.execCommand', {
@@ -293,20 +293,20 @@ joplin.plugins.register({
 
     await joplin.settings.onChange(async (event) => {
       settings = await get_settings();
-      // validate hugging face max tokens  
+      // 验证 Hugging Face 最大标记数
       if ((event.keys.includes('chat_hf_model_id') ||
            event.keys.includes('model') ||
            event.keys.includes('max_tokens')) &&
           (settings.model === 'Hugging Face') &&
           (settings.max_tokens > 2048)) {
         const choice = await joplin.views.dialogs.showMessageBox(
-          `Hugging Face models typically do not exceed 2048 tokens, yet max tokens is currently set to ${settings.max_tokens}. Would you like to change it to 2048?`);
+          `Hugging Face 模型通常不超过 2048 个标记，但当前最大标记数设置为 ${settings.max_tokens}。是否将其更改为 2048？`);
         if (choice === 0) {
           await joplin.settings.setValue('max_tokens', 2048);
           settings = await get_settings();
         }
       }
-      // load generation model
+      // 加载生成模型
       if (event.keys.includes('openai_api_key') ||
           event.keys.includes('hf_api_key') ||
           event.keys.includes('google_api_key') ||
@@ -330,7 +330,7 @@ joplin.plugins.register({
 
         model_gen = await load_generation_model(settings);
       }
-      // load embedding model
+      // 加载嵌入模型
       if (event.keys.includes('openai_api_key') ||
           event.keys.includes('hf_api_key') ||
           event.keys.includes('notes_model') ||
@@ -350,11 +350,11 @@ joplin.plugins.register({
           await update_note_db(model_embed, panel);
         }
       }
-      // update panel
+      // 更新面板
       if (model_embed.model) {
         find_notes_debounce(model_embed, panel)
       };
-      // update db refresh interval
+      // 更新数据库刷新间隔
       if (event.keys.includes('notes_db_update_delay')) {
         delay_db_update = 60 * settings.notes_db_update_delay;
         update_note_db_debounce = debounce(update_note_db,
